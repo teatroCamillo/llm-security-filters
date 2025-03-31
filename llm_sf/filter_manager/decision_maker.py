@@ -1,6 +1,10 @@
 """
 decision_maker.py
 Utility to merge the results of multiple filters in parallel mode.
+
+DM powinnien być brdziej elestyczny niż sekwencyjne podejście gdyż za pomocą argumentów
+można łatwiej sterować progiem a co za tym idzie dostosować do oczekiwań użytkownika.
+
 """
 
 def combine_parallel_results(results):

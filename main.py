@@ -2,7 +2,7 @@ import sys
 import requests
 import json
 
-from filter_manager.filter_orchestrator import FilterOrchestrator
+from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 
 def main():
     BASE_URL = "http://localhost:11434/api/chat"
