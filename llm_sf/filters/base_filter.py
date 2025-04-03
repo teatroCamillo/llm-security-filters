@@ -1,3 +1,4 @@
+# base_filter.py
 from typing import Dict, Any
 
 class FilterResult:

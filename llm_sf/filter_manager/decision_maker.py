@@ -1,5 +1,6 @@
+# decision_maker.py
 from typing import List
-from llm_sf.filters.base_filter import FilterResult
+from filters.base_filter import FilterResult
 
 def combine_parallel_results(results: List[FilterResult]) -> FilterResult:
     """

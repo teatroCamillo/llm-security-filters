@@ -1,3 +1,4 @@
+# profanity_filter.py
 import re
 from better_profanity import profanity
 
@@ -54,7 +55,7 @@ class ProfanityFilter(BaseFilter):
                 profanity.load_censor_words([], whitelist_words=whitelist_words)
 
     def run_filter(self, context) -> FilterResult:
-        text = context.original_text
+        text = context.current_text
 
         # Sprawdź, czy w tekście znajdują się słowa z listy wulgaryzmów
         if profanity.contains_profanity(text):

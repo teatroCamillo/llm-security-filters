@@ -1,49 +1,63 @@
-"""
-Filter: Safeguard Against Disabling Security Features
-Checks user attempts to override filters or reveal system prompts.
-"""
+# safeguard_against_disabling_security_features_filter.py
 
-import re
+from filters.base_filter import BaseFilter, FilterResult
 
-def check_inbound(user_text: str) -> dict:
+class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """
-    If the user is trying to instruct the system to bypass or disable filters,
-    block or sanitize.
+    Filtr wykrywający próby wyłączenia istotnych funkcji bezpieczeństwa 
+    (np. firewalla, antywirusa, innych mechanizmów ochronnych).
+    Jeśli znajdzie podejrzane sformułowania, może blokować lub sugerować sanitizację.
     """
-    # Naive pattern detection
-    # e.g., "ignore all filters", "disable your security"
-    pattern = r"(ignore\s+all\s+filters|disable\s+(security|filters))"
-    if re.search(pattern, user_text, flags=re.IGNORECASE):
-        return {
-            "verdict": "block",
-            "reason": "Attempt to disable security features",
-            "final_text": user_text
-        }
 
-    return {
-        "verdict": "allow",
-        "reason": None,
-        "final_text": user_text
-    }
+    def __init__(self, block_on_detect: bool = True):
+        """
+        :param block_on_detect: jeśli True, wykrycie próby wyłączenia zabezpieczeń
+                                powoduje natychmiastowe zablokowanie (block),
+                                w przeciwnym wypadku – sanitize.
+        """
+        self.block_on_detect = block_on_detect
+        # Poniższa lista jest przykładowa – docelowo można rozbudować.
+        self.suspicious_phrases = [
+            "disable firewall",
+            "turn off firewall",
+            "disable antivirus",
+            "turn off antivirus",
+            "bypass security",
+            "disable security features",
+            "disabling security"
+        ]
 
-def check_outbound(llm_text: str) -> dict:
-    """
-    If the LLM somehow tries to reveal internal details of the security filter
-    or system prompts, we can catch that. 
-    Example naive check for 'FilterOrchestrator' references or 'system prompt'.
-    """
-    if "FilterOrchestrator" in llm_text or "system prompt" in llm_text.lower():
-        # Possibly block it or sanitize it
-        sanitized = llm_text.replace("FilterOrchestrator", "[REDACTED]")
-        sanitized = re.sub(r"system prompt", "[REDACTED]", sanitized, flags=re.IGNORECASE)
-        return {
-            "verdict": "sanitize",
-            "reason": "LLM tried to reveal system info",
-            "final_text": sanitized
-        }
+    def run_filter(self, context):
+        text = context.current_text.lower()
 
-    return {
-        "verdict": "allow",
-        "reason": None,
-        "final_text": llm_text
-    }
+        # Sprawdzamy, czy w tekście występuje któraś z podejrzanych fraz
+        found_suspicious = any(phrase in text for phrase in self.suspicious_phrases)
+
+        if found_suspicious:
+            if self.block_on_detect:
+                return FilterResult(
+                    verdict="block",
+                    reason="Detected instruction or attempt to disable security features."
+                )
+            else:
+                # W tym wypadku możemy zasugerować, by zanonimizować 
+                # (lub zmodyfikować) fragmenty tekstu – tu jednak trudno stwierdzić,
+                # co konkretnie „cenzurować”. Możemy jedynie wskazać, że tekst wymaga korekty.
+                # Dla przykładu – oflagujemy całe polecenie, wstawiając np. [SECURITY WARNING].
+                sanitized_text = text.replace("disable", "[SECURITY WARNING]")
+                sanitized_text = sanitized_text.replace("turn off", "[SECURITY WARNING]")
+                sanitized_text = sanitized_text.replace("bypass", "[SECURITY WARNING]")
+
+                # W praktyce to bardzo uproszczone podejście – docelowo należy
+                # precyzyjniej modyfikować tylko odpowiednie fragmenty.
+                return FilterResult(
+                    verdict="sanitize",
+                    reason="Suspicious request to disable security features. Sanitize suggested.",
+                    metadata={"sanitized_text": sanitized_text}
+                )
+
+        # Jeśli nie wykryto podejrzanych wzmiankek -> allow
+        return FilterResult(
+            verdict="allow",
+            reason="No attempt to disable or bypass security features detected."
+        )

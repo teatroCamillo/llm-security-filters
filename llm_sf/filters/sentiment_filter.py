@@ -1,7 +1,8 @@
+# sentiment_filter.py
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 
-from .base_filter import BaseFilter, FilterResult
+from filters.base_filter import BaseFilter, FilterResult
 
 # to samo – załadowanie leksykonu
 nltk.download('vader_lexicon', quiet=True)
@@ -18,7 +19,7 @@ class SentimentFilter(BaseFilter):
         self.analyzer = SentimentIntensityAnalyzer()
 
     def run_filter(self, context) -> FilterResult:
-        text = context.original_text
+        text = context.current_text
         scores = self.analyzer.polarity_scores(text)
         
         if scores["compound"] < self.threshold:

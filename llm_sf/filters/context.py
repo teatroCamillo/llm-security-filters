@@ -1,10 +1,15 @@
+# context.py
 class Context:
     """
     Prosty kontener na dane, które mogą być współdzielone między filtrami.
-    Na razie przechowuje tylko oryginalny tekst, ale można dodać tutaj logi,
-    liczniki, statusy itp. 
     """
     def __init__(self, original_text: str):
+        # Tekst oryginalny (nigdy nie modyfikujemy, trzymamy do wglądu)
         self.original_text = original_text
-        # Możemy tu dodać np. dictionary na metadane z każdego filtra 
+        
+        # Tekst, na którym faktycznie pracują filtry; 
+        # w trybie serial może być wielokrotnie modyfikowany.
+        self.current_text = original_text
+        
+        # Metadane – dowolne dodatkowe informacje
         self.metadata = {}

@@ -1,52 +1,66 @@
-"""
-Filter: Confidentiality / Sensitive Data
-Possible approach: Basic PII detection with regex
-"""
+# confidential_and_sensitive_data_filter.py
 
 import re
+from filters.base_filter import BaseFilter, FilterResult
 
-def check_inbound(user_text: str) -> dict:
+class ConfidentialAndSensitiveDataFilter(BaseFilter):
     """
-    For demonstration, let's do nothing on inbound for PII.
-    (Assume user may *enter* their own data at their own risk.)
+    Filtr odpowiedzialny za wykrywanie danych poufnych (np. maili, numerów telefonów,
+    numerów kart kredytowych). Jeśli w treści występują takie dane, filtr może:
+      - zablokować wiadomość (verdict='block'), lub
+      - zasygnalizować potrzebę zanonimizowania (verdict='sanitize'),
+        a w `metadata['sanitized_text']` zamieścić wersję ocenzurowaną.
     """
-    return {
-        "verdict": "allow",
-        "reason": None,
-        "final_text": user_text
-    }
 
-def check_outbound(llm_text: str) -> dict:
-    """
-    Check LLM response for potential leaks of private/sensitive info.
-    Simple example: detect possible credit card # or phone # patterns,
-    then sanitize them.
-    """
-    # Example: match 16-digit numbers (credit-card-like)
-    cc_pattern = r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b"
-    matches = re.findall(cc_pattern, llm_text)
-
-    if matches:
-        sanitized_text = re.sub(cc_pattern, "[REDACTED-CC]", llm_text)
-        return {
-            "verdict": "sanitize",
-            "reason": "Detected potential credit card info",
-            "final_text": sanitized_text
+    def __init__(self, block_on_detect: bool = False):
+        """
+        :param block_on_detect: Jeśli True – wykrycie danych poufnych prowadzi do 'block'.
+                                Jeśli False – sugerujemy 'sanitize'.
+        """
+        self.block_on_detect = block_on_detect
+        
+        # Proste (i niedoskonałe!) przykładowe wyrażenia regularne:
+        self.patterns = {
+            "PHONE": re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"),
+            "EMAIL": re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"),
+            # Przykład uproszczonego regexu dla kart kredytowych (VISA/MC): 16 cyfr
+            "CREDIT_CARD": re.compile(r"\b(?:\d[ -]*?){13,16}\b")
         }
 
-    # Example: match phone # (extremely naive)
-    phone_pattern = r"\b\d{3}[- ]?\d{3}[- ]?\d{4}\b"
-    matches_phone = re.findall(phone_pattern, llm_text)
-    if matches_phone:
-        sanitized_text = re.sub(phone_pattern, "[REDACTED-PHONE]", llm_text)
-        return {
-            "verdict": "sanitize",
-            "reason": "Detected possible phone number",
-            "final_text": sanitized_text
-        }
+    def run_filter(self, context):
+        text = context.current_text
 
-    return {
-        "verdict": "allow",
-        "reason": None,
-        "final_text": llm_text
-    }
+        found_sensitive_data = False
+
+        # Sprawdzamy, czy którykolwiek wzorzec występuje w tekście
+        for name, pattern in self.patterns.items():
+            if pattern.search(text):
+                found_sensitive_data = True
+                break
+
+        if found_sensitive_data:
+            # Jeśli filtr ma blokować natychmiast
+            if self.block_on_detect:
+                return FilterResult(
+                    verdict="block",
+                    reason="Detected confidential/sensitive data. 'block_on_detect' is True."
+                )
+            else:
+                # Przygotowujemy ocenzurowany tekst.
+                sanitized_text = text
+                for name, pattern in self.patterns.items():
+                    # Zamieniamy potencjalne fragmenty poufne na placeholder
+                    placeholder = f"[{name}]"
+                    sanitized_text = pattern.sub(placeholder, sanitized_text)
+
+                return FilterResult(
+                    verdict="sanitize",
+                    reason="Detected confidential/sensitive data. Suggesting sanitization.",
+                    metadata={"sanitized_text": sanitized_text}
+                )
+
+        # Jeśli brak danych poufnych -> przepuszczamy
+        return FilterResult(
+            verdict="allow",
+            reason="No confidential/sensitive data detected."
+        )
