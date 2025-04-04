@@ -1,7 +1,7 @@
 # sentiment_filter.py
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
-from filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 # Downloading the sentiment lexicon required by VADER
 nltk.download('vader_lexicon', quiet=True)

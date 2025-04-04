@@ -1,5 +1,5 @@
 # safeguard_against_disabling_security_features_filter.py
-from filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """

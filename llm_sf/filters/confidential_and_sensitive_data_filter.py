@@ -1,6 +1,6 @@
 # confidential_and_sensitive_data_filter.py
 import re
-from filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 class ConfidentialAndSensitiveDataFilter(BaseFilter):
     """

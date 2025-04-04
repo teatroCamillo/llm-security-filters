@@ -1,5 +1,5 @@
 # base_filter.py
-from .filter_result import FilterResult
+from llm_sf.filters.filter_result import FilterResult
 
 class BaseFilter:
     """

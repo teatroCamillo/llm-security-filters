@@ -1,16 +1,17 @@
-import sys
+# main.py
 import requests
-import json
 
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
+from llm_sf.filters.profanity_filter import ProfanityFilter
 
 def main():
     BASE_URL = "http://localhost:11434/api/chat"
     conversation_history = []
 
-    # Create an instance of the orchestrator.
-    # Switch 'mode' to "serial", "parallel", or "hybrid" as desired.
-    orchestrator = FilterOrchestrator(mode="serial")  
+    # Create a single Orchestrator instance.
+    # You may add or configure filters separately if needed.
+    orchestrator = FilterOrchestrator(mode="serial")
+    orchestrator.add_filter(ProfanityFilter(block_on_detect=True))
 
     print("Simple console chat with llama3.2 (example). Type Ctrl+C or an empty line to exit.\n")
 
@@ -21,21 +22,24 @@ def main():
                 print("Exiting chat.")
                 break
 
-            # ---- 1) Apply Inbound Filters via Orchestrator ----
-            inbound_result = orchestrator.apply_inbound(user_input)
-            if inbound_result["verdict"] == "block":
-                print(f"[SYSTEM] Request blocked by filters: {inbound_result['reason']}")
+            # ---- 1) Inbound Filtering on User Input ----
+            inbound_result = orchestrator.run(user_input)
+
+            if inbound_result.verdict == "block":
+                print(f"[SYSTEM] Request blocked by filters: {inbound_result.reason}")
                 continue
-            elif inbound_result["verdict"] == "sanitize":
-                user_input_filtered = inbound_result["final_text"]
+            elif inbound_result.verdict == "sanitize":
+                # 'sanitized_text' is the typically used field if the filter replaced something
+                user_input_filtered = inbound_result.metadata.get("sanitized_text", "")
                 print(f"[SYSTEM] User input sanitized: {user_input_filtered}")
             else:
-                user_input_filtered = inbound_result["final_text"]
+                # 'allow' verdict => text is in 'final_text'
+                user_input_filtered = inbound_result.metadata.get("final_text", "")
 
-            # ---- Add user message to conversation ----
+            # ---- Add user message to the conversation history ----
             conversation_history.append({"role": "user", "content": user_input_filtered})
 
-            # ---- 2) Call the LLM API ----
+            # ---- 2) Send the request to the LLM API ----
             payload = {
                 "model": "llama3.2",
                 "messages": conversation_history,
@@ -47,26 +51,27 @@ def main():
                 response.raise_for_status()
             except requests.exceptions.RequestException as e:
                 print(f"[ERROR] Communication with LLM failed: {e}")
-                # Remove last user message from history if needed
+                # Optionally remove last user message if the request fails
                 conversation_history.pop()
                 continue
 
             result = response.json()
             llm_output = result.get("message", {}).get("content", "")
 
-            # ---- 3) Apply Outbound Filters via Orchestrator ----
-            outbound_result = orchestrator.apply_outbound(llm_output)
-            if outbound_result["verdict"] == "block":
-                print(f"[SYSTEM] LLM response blocked by filters: {outbound_result['reason']}")
-                # Optionally remove from conversation history if blocked
+            # ---- 3) Outbound Filtering on LLM Response ----
+            outbound_result = orchestrator.run(llm_output)
+
+            if outbound_result.verdict == "block":
+                print(f"[SYSTEM] LLM response blocked by filters: {outbound_result.reason}")
+                # You may choose to remove the last user input from the conversation if blocked
                 continue
-            elif outbound_result["verdict"] == "sanitize":
-                llm_output_filtered = outbound_result["final_text"]
+            elif outbound_result.verdict == "sanitize":
+                llm_output_filtered = outbound_result.metadata.get("sanitized_text", "")
                 print(f"[SYSTEM] LLM output sanitized: {llm_output_filtered}")
             else:
-                llm_output_filtered = outbound_result["final_text"]
+                llm_output_filtered = outbound_result.metadata.get("final_text", "")
 
-            # ---- 4) Display to user & add to conversation ----
+            # ---- 4) Display LLM response & add to conversation ----
             print(f"Assistant: {llm_output_filtered}")
             conversation_history.append({"role": "assistant", "content": llm_output_filtered})
 

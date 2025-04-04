@@ -1,15 +1,12 @@
 # test_filter_orchestrator.py
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pytest
 
-from filter_manager.filter_orchestrator import FilterOrchestrator
-from filters.profanity_filter import ProfanityFilter
-from filters.sentiment_filter import SentimentFilter
-from filters.confidential_and_sensitive_data_filter import ConfidentialAndSensitiveDataFilter
-from filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
-from filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
+from llm_sf.filters.profanity_filter import ProfanityFilter
+from llm_sf.filters.sentiment_filter import SentimentFilter
+from llm_sf.filters.confidential_and_sensitive_data_filter import ConfidentialAndSensitiveDataFilter
+from llm_sf.filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
+from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 
 class AlwaysBlockFilter(BaseFilter):

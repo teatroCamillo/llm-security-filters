@@ -1,7 +1,7 @@
 # profanity_filter.py
 import re
 from better_profanity import profanity
-from .base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 class ProfanityFilter(BaseFilter):
     """
