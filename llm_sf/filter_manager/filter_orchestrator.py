@@ -5,8 +5,7 @@ from typing import List
 from filters.base_filter import BaseFilter, FilterResult
 from filters.context import Context
 from sanitizer.data_sanitizer import DataSanitizer
-from .decision_maker import combine_parallel_results
-
+from .decision_maker import DecisionMaker
 
 class FilterOrchestrator:
     """
@@ -14,7 +13,7 @@ class FilterOrchestrator:
     lub równoległym (parallel), z uwzględnieniem iteracji "sanitize" -> 
     popraw -> ponowne sprawdzenie.
     """
-    def __init__(self, max_sanitize_attempts: int = 3):
+    def __init__(self, _dm_requested: bool = False, max_sanitize_attempts: int = 3):
         """
         :param max_sanitize_attempts: maksymalna liczba cykli:
           filtr -> "sanitize" -> DataSanitizer -> ponowne uruchomienie filtra.
@@ -22,8 +21,11 @@ class FilterOrchestrator:
         """
         self._filters: List[BaseFilter] = []
         self._mode = "serial"
-        self._dm_requested = False  # czy w trybie parallel używamy decision_maker
+        self._dm_requested = _dm_requested
         self.max_sanitize_attempts = max_sanitize_attempts
+        self.decision_maker = None
+        if self._dm_requested:
+            self.decision_maker = DecisionMaker()
 
     def add_filter(self, filtr: BaseFilter):
         self._filters.append(filtr)
@@ -31,13 +33,6 @@ class FilterOrchestrator:
 
     def apply(self, mode="serial"):
         self._mode = mode
-        return self
-
-    def dm(self):
-        """
-        Jeśli chcemy użyć decision_maker w trybie parallel.
-        """
-        self._dm_requested = True
         return self
 
     def run(self, text: str) -> FilterResult:
@@ -101,7 +96,7 @@ class FilterOrchestrator:
 
         # Scalmy wyniki
         if self._dm_requested:
-            final_result = combine_parallel_results(results)
+            final_result = self.decision_maker.combine_parallel_results(results)
         else:
             final_result = self._default_parallel_decision(results)
 

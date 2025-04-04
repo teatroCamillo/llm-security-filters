@@ -2,33 +2,48 @@
 from typing import List
 from filters.base_filter import FilterResult
 
-def combine_parallel_results(results: List[FilterResult]) -> FilterResult:
+class DecisionMaker:
     """
-    Bardziej elastyczny mechanizm decyzyjny dla wyników z trybu równoległego.
-    Przykład: 
-      - jeśli jakikolwiek filtr zwraca block -> block,
-      - jeśli żaden nie zablokował, ale któryś sanitize -> sanitize,
-      - w innym wypadku -> allow.
-    Można tu dodać rozbudowane reguły.
+    Utility class for aggregating results from multiple content filters.
+
+    This class provides logic to evaluate a collection of `FilterResult` objects,
+    representing the outcomes of parallel filters, and derives a unified decision
+    with a clear priority order: 'block' > 'sanitize' > 'allow'.
     """
-    for r in results:
-        if r.verdict == "block":
+
+    def combine_parallel_results(self, results: List[FilterResult]) -> FilterResult:
+        """
+        Aggregates filter results into a single decision based on priority rules.
+
+        The logic follows a fixed priority:
+            1. If any result has verdict "block", the overall result is "block".
+            2. If no blocks are found but at least one "sanitize" appears, the result is "sanitize".
+            3. If all results are "allow", the result is "allow".
+
+        This method enables centralized decision-making when filters operate in parallel.
+
+        Args:
+            results (List[FilterResult]): A list of results returned from individual filters.
+
+        Returns:
+            FilterResult: A single `FilterResult` representing the aggregated decision.
+        """
+        for r in results:
+            if r.verdict == "block":
+                return FilterResult(
+                    verdict="block",
+                    reason=r.reason,
+                    metadata=r.metadata
+                )
+
+        sanitize_reasons = [
+            r.reason or "sanitize requested" for r in results if r.verdict == "sanitize"
+        ]
+
+        if sanitize_reasons:
             return FilterResult(
-                verdict="block",
-                reason=r.reason, 
-                metadata=r.metadata
+                verdict="sanitize",
+                reason="; ".join(sanitize_reasons)
             )
 
-    sanitize_reasons = []
-    for r in results:
-        if r.verdict == "sanitize":
-            sanitize_reasons.append(r.reason or "sanitize requested")
-
-    if sanitize_reasons:
-        return FilterResult(
-            verdict="sanitize",
-            reason="; ".join(sanitize_reasons)
-        )
-
-    # Jeśli nie ma block i nie ma sanitize -> allow
-    return FilterResult(verdict="allow")
+        return FilterResult(verdict="allow")

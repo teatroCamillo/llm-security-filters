@@ -174,7 +174,7 @@ def test_parallel_sanitize_if_no_block_decision_maker():
     Decision Maker powinien połączyć to w final 'sanitize'.
     """
     text = "Profanity word: fuck!"
-    orchestrator = FilterOrchestrator(max_sanitize_attempts=2).apply("parallel").dm()
+    orchestrator = FilterOrchestrator(_dm_requested = True, max_sanitize_attempts=2).apply("parallel")
     orchestrator.add_filter(AlwaysSanitizeFilter())
     orchestrator.add_filter(AllowFilter())
 
