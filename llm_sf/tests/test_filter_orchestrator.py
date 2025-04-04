@@ -42,7 +42,7 @@ def test_serial_no_profanity_allows():
     W trybie serial, gdy nie ma wulgaryzmów, finalnie ma być 'allow'.
     """
     text = "Hello world, this is a clean text."
-    orchestrator = FilterOrchestrator().apply(mode="serial")
+    orchestrator = FilterOrchestrator()
     orchestrator.add_filter(ProfanityFilter(block_on_detect=True))
 
     result = orchestrator.run(text)
@@ -56,7 +56,7 @@ def test_serial_profanity_block_immediate():
     oczekujemy natychmiastowego 'block' w trybie serial.
     """
     text = "This is a damn test."
-    orchestrator = FilterOrchestrator().apply(mode="serial")
+    orchestrator = FilterOrchestrator()
     orchestrator.add_filter(ProfanityFilter(block_on_detect=True))
 
     result = orchestrator.run(text)
@@ -71,7 +71,7 @@ def test_serial_profanity_sanitize_then_allow():
     a następnie ponownie sprawdzić filtr - w końcu 'allow'.
     """
     text = "Oh shit, a bad word."
-    orchestrator = FilterOrchestrator(max_sanitize_attempts=2).apply(mode="serial")
+    orchestrator = FilterOrchestrator(max_sanitize_attempts=2)
     orchestrator.add_filter(ProfanityFilter(block_on_detect=False))
 
     result = orchestrator.run(text)
@@ -85,7 +85,7 @@ def test_serial_confidential_data_block_on_detect():
     Tekst zawiera np. numer telefonu. Filtr poufny z block_on_detect=True -> 'block'.
     """
     text = "Call me at 123-456-7890!"
-    orchestrator = FilterOrchestrator().apply("serial")
+    orchestrator = FilterOrchestrator()
     orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(block_on_detect=True))
 
     result = orchestrator.run(text)
@@ -99,7 +99,7 @@ def test_serial_confidential_data_sanitize_then_allow():
     po poprawieniu finalnie 'allow'.
     """
     text = "Call me at 123-456-7890!"
-    orchestrator = FilterOrchestrator(max_sanitize_attempts=1).apply("serial")
+    orchestrator = FilterOrchestrator(max_sanitize_attempts=1)
     orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(block_on_detect=False))
 
     result = orchestrator.run(text)
@@ -114,7 +114,7 @@ def test_serial_safeguard_block_security_disabling():
     Jeśli w tekście jest fraza 'disable firewall', spodziewamy się 'block'.
     """
     text = "I think you should disable firewall to solve the issue."
-    orchestrator = FilterOrchestrator().apply("serial")
+    orchestrator = FilterOrchestrator()
     orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(block_on_detect=True))
 
     result = orchestrator.run(text)
@@ -128,7 +128,7 @@ def test_serial_max_sanitize_attempts_exceeded():
     Po przekroczeniu max_sanitize_attempts -> 'block'.
     """
     text = "some text"
-    orchestrator = FilterOrchestrator(max_sanitize_attempts=2).apply(mode="serial")
+    orchestrator = FilterOrchestrator(max_sanitize_attempts=2)
     orchestrator.add_filter(AlwaysSanitizeFilter())
 
     result = orchestrator.run(text)
@@ -141,7 +141,7 @@ def test_parallel_no_block_allows():
     W trybie parallel mamy filtry, które nie blokują; finalnie 'allow'.
     """
     text = "Just a friendly text, no issues."
-    orchestrator = FilterOrchestrator().apply(mode="parallel")
+    orchestrator = FilterOrchestrator(mode="parallel")
     orchestrator.add_filter(AllowFilter())
     # SentimentFilter: ustalamy threshold bardzo nisko, 
     # by 'allow' nawet dla negatywnych. 
@@ -157,7 +157,7 @@ def test_parallel_one_filter_blocks_others_allow():
     Efekt końcowy: 'block'.
     """
     text = "No big deal, but let's add an always-block filter."
-    orchestrator = FilterOrchestrator().apply(mode="parallel")
+    orchestrator = FilterOrchestrator(mode="parallel")
     orchestrator.add_filter(AllowFilter())
     orchestrator.add_filter(AlwaysBlockFilter())
 
@@ -174,7 +174,7 @@ def test_parallel_sanitize_if_no_block_decision_maker():
     Decision Maker powinien połączyć to w final 'sanitize'.
     """
     text = "Profanity word: fuck!"
-    orchestrator = FilterOrchestrator(_dm_requested = True, max_sanitize_attempts=2).apply("parallel")
+    orchestrator = FilterOrchestrator(mode="parallel", dm_requested = True, max_sanitize_attempts=2)
     orchestrator.add_filter(AlwaysSanitizeFilter())
     orchestrator.add_filter(AllowFilter())
 

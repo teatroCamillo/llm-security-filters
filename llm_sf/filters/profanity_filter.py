@@ -4,14 +4,14 @@ from better_profanity import profanity
 
 from .base_filter import BaseFilter, FilterResult
 
+
 class ProfanityFilter(BaseFilter):
     """
-    Filtr odpowiedzialny TYLKO za wykrywanie wulgaryzmów
-    przy pomocy biblioteki 'better_profanity'.
+    A filter responsible solely for detecting profanity using the 'better_profanity' library.
 
-    Nie dokonuje faktycznej modyfikacji w tekście końcowym w systemie,
-    a jedynie informuje o potrzebie zablokowania (verdict='block')
-    lub zsanityzowania (verdict='sanitize').
+    This filter does not directly modify the final text in the system. Instead, it informs 
+    whether the text should be blocked (`verdict='block'`) or sanitized (`verdict='sanitize'`) 
+    based on configuration.
     """
 
     def __init__(
@@ -23,51 +23,59 @@ class ProfanityFilter(BaseFilter):
         censor_char='*'
     ):
         """
-        :param custom_badwords: lista wulgaryzmów do użycia w bibliotece better_profanity
-                                (zastępuje domyślną listę, o ile use_default_wordlist=False
-                                – w przeciwnym wypadku trzeba je "dodać").
-        :param whitelist_words: lista słów, które mają nie być uznawane za wulgarne
-        :param block_on_detect: flaga – czy wykrycie wulgaryzmu prowadzi do 'block' (True)
-                                czy raczej 'sanitize' (False).
-        :param use_default_wordlist: jeśli True, ładuje domyślną listę z biblioteki
-        :param censor_char: znak (lub ciąg znaków), który `.censor()` wstawi za zanonimizowane
-                            słowa (np. '*', '-', '#'); domyślnie '*'
+        Initializes the profanity filter with configurable wordlists and behavior.
+
+        Args:
+            custom_badwords (list, optional): A custom list of profane words to be loaded.
+                If `use_default_wordlist` is False, this replaces the default list.
+                If `use_default_wordlist` is True, these words will be added.
+            whitelist_words (list, optional): A list of words that should not be treated as profanity.
+            block_on_detect (bool): If True, detected profanity leads to a "block" verdict;
+                otherwise, it results in "sanitize".
+            use_default_wordlist (bool): If True, loads the default wordlist from the library.
+            censor_char (str): Character(s) used by `.censor()` to replace profane words. Default is '*'.
         """
         self.block_on_detect = block_on_detect
         self.censor_char = censor_char
 
-        # Załaduj słowa w zależności od parametrów
-        # UWAGA: better_profanity ma stan globalny – kolejne wywołania modyfikują ten stan.
+        # Load the wordlist depending on the configuration.
+        # Note: better_profanity maintains a global state.
         if use_default_wordlist:
-            # Ładujemy domyślną listę
             profanity.load_censor_words(whitelist_words=whitelist_words)
-            
-            # Jeżeli mamy custom_badwords, można je DODAĆ do listy (zamiast zastępować)
-            # w przeciwnym wypadku: load_censor_words(custom_badwords, whitelist_words=...)
+
             if custom_badwords:
                 profanity.add_censor_words(custom_badwords)
         else:
-            # Tylko custom_badwords (zastępuje listę)
             if custom_badwords is not None:
                 profanity.load_censor_words(custom_badwords, whitelist_words=whitelist_words)
             else:
-                # Brak custom_badwords i brak listy domyślnej -> pusta lista
                 profanity.load_censor_words([], whitelist_words=whitelist_words)
 
     def run_filter(self, context) -> FilterResult:
+        """
+        Applies the profanity filter to the provided context text.
+
+        Depending on the configuration, detected profanity leads to either a "block" or "sanitize" verdict.
+        Sanitized text is included in metadata if applicable.
+
+        Args:
+            context: An object containing the current text under `context.current_text`.
+
+        Returns:
+            FilterResult: The result of the filtering operation, which can be:
+                - "block" if profanity is detected and blocking is enabled,
+                - "sanitize" if profanity is detected and blocking is disabled,
+                - "allow" if no profanity is found.
+        """
         text = context.current_text
 
-        # Sprawdź, czy w tekście znajdują się słowa z listy wulgaryzmów
         if profanity.contains_profanity(text):
             if self.block_on_detect:
-                # Natychmiast blokujemy
                 return FilterResult(
                     verdict="block",
                     reason="Detected profanity. 'block_on_detect' is True."
                 )
             else:
-                # Sygnał do sanitizacji. W metadanych (metadata) umieszczamy zanonimizowany tekst,
-                # choć finalna zmiana tekstu leży w gestii innej klasy (Sanitizer).
                 sanitized_text = profanity.censor(text, self.censor_char)
                 return FilterResult(
                     verdict="sanitize",
@@ -75,7 +83,6 @@ class ProfanityFilter(BaseFilter):
                     metadata={"sanitized_text": sanitized_text}
                 )
 
-        # Jeśli brak wulgaryzmów -> przepuszczamy
         return FilterResult(
             verdict="allow",
             reason="No profanity detected."

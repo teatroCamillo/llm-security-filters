@@ -1,4 +1,3 @@
-# file: filter_orchestrator.py
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
@@ -7,64 +6,84 @@ from filters.context import Context
 from sanitizer.data_sanitizer import DataSanitizer
 from .decision_maker import DecisionMaker
 
+
 class FilterOrchestrator:
     """
-    Zarządza uruchamianiem wielu filtrów w trybie szeregowym (serial) 
-    lub równoległym (parallel), z uwzględnieniem iteracji "sanitize" -> 
-    popraw -> ponowne sprawdzenie.
+    Manages and coordinates the execution of a series of content filters.
+
+    Enables filtering in either serial or parallel mode, with optional decision-making
+    aggregation and repeated sanitization attempts for content improvement.
     """
-    def __init__(self, _dm_requested: bool = False, max_sanitize_attempts: int = 3):
+
+    def __init__(self, mode: str = "serial", dm_requested: bool = False, max_sanitize_attempts: int = 3):
         """
-        :param max_sanitize_attempts: maksymalna liczba cykli:
-          filtr -> "sanitize" -> DataSanitizer -> ponowne uruchomienie filtra.
-          Jeśli po tylu próbach filtr wciąż zwraca 'sanitize', uznajemy 'block'.
+        Initializes the filtering orchestrator with configuration options.
+
+        Args:
+            mode (str): Execution mode, either 'serial' or 'parallel'.
+            dm_requested (bool): Whether to enable result aggregation via DecisionMaker.
+            max_sanitize_attempts (int): Maximum number of allowed sanitization retries.
         """
         self._filters: List[BaseFilter] = []
-        self._mode = "serial"
-        self._dm_requested = _dm_requested
+        self.mode = mode
+        self.dm_requested = dm_requested
         self.max_sanitize_attempts = max_sanitize_attempts
-        self.decision_maker = None
-        if self._dm_requested:
-            self.decision_maker = DecisionMaker()
+        self.decision_maker = DecisionMaker() if dm_requested else None
 
     def add_filter(self, filtr: BaseFilter):
-        self._filters.append(filtr)
-        return self
+        """
+        Registers a filter to be applied during orchestration.
 
-    def apply(self, mode="serial"):
-        self._mode = mode
+        Args:
+            filtr (BaseFilter): An instance of a filter implementing BaseFilter.
+
+        Returns:
+            FilterOrchestrator: The current orchestrator instance (supports method chaining).
+        """
+        self._filters.append(filtr)
         return self
 
     def run(self, text: str) -> FilterResult:
         """
-        Główna metoda, która uruchamia filtry na zadanym `text`.
+        Executes all registered filters on the input text.
+
+        Chooses between serial and parallel execution depending on the configured mode.
+
+        Args:
+            text (str): The text content to be filtered.
+
+        Returns:
+            FilterResult: The final result after all filters have been processed.
+
+        Raises:
+            ValueError: If the selected mode is unsupported.
         """
         context = Context(text)
 
-        if self._mode == "serial":
+        if self.mode == "serial":
             return self._run_serial(context)
-        elif self._mode == "parallel":
+        elif self.mode == "parallel":
             return self._run_parallel(context)
         else:
-            raise ValueError(f"Unsupported mode: {self._mode}")
+            raise ValueError(f"Unsupported mode: {self.mode}")
 
     def _run_serial(self, context: Context) -> FilterResult:
         """
-        Uruchamiamy filtry jeden po drugim.
-        - Każdy filtr pracuje na aktualnym tekście w context.current_text
-          (zaczyna od oryginału, lecz może być modyfikowany przez poprzednie filtry).
-        - Gdy filtr zgłosi 'sanitize', natychmiastowo odpalamy DataSanitizer i
-          ponownie sprawdzamy TEN SAM filtr (do max_sanitize_attempts razy).
-          Jeśli po przekroczeniu limitu wciąż 'sanitize', zwracamy 'block'.
-        - Jeśli któryś filtr zwraca 'block' – przerywamy.
-        - Jeśli wszystkie filtry przejdą (czyli 'allow'), zwracamy finalne "allow".
+        Applies filters one after another, using sanitization when necessary.
+
+        Ensures that content is refined or blocked based on each filter’s verdict.
+
+        Args:
+            context (Context): The current state of the text and associated metadata.
+
+        Returns:
+            FilterResult: The first blocking result encountered, or an allow result if all pass.
         """
         for filtr in self._filters:
             result = self._run_filter_with_sanitization_cycle(filtr, context)
             if result.verdict == "block":
-                return result  # przerywamy od razu
+                return result
 
-        # Jeśli żaden filtr nie zablokował, finalnie allow:
         return FilterResult(
             verdict="allow",
             reason="All filters passed",
@@ -73,96 +92,105 @@ class FilterOrchestrator:
 
     def _run_parallel(self, context: Context) -> FilterResult:
         """
-        Uruchomienie filtrów równolegle. 
-        Każdy filtr działa niezależnie, rozpoczynając od oryginalnego tekstu (context.original_text).
-        Dla spójności z trybem serial również tu stosujemy wielokrotne próby sanitizacji
-        w ramach POJEDYNCZEGO filtra, ale z założeniem, że filtry nie wpływają na siebie nawzajem.
-        
-        Po zebraniu wyników (każdy w postaci FilterResult), łączymy je przez Decision Maker
-        (jeśli jest włączony) lub przez `_default_parallel_decision`.
+        Executes all filters concurrently using the original input text.
+
+        Supports aggregation of individual results through a DecisionMaker if enabled.
+
+        Args:
+            context (Context): The original text and context for filtering.
+
+        Returns:
+            FilterResult: Aggregated result based on individual filter outputs.
         """
         results = []
         with ThreadPoolExecutor() as executor:
             futures = [
                 executor.submit(
-                    self._run_filter_in_parallel_mode, 
-                    filtr, 
-                    context.original_text  # każdy filtr startuje z oryginału
+                    self._run_filter_in_parallel_mode,
+                    filtr,
+                    context.original_text
                 )
                 for filtr in self._filters
             ]
             for future in as_completed(futures):
                 results.append(future.result())
 
-        # Scalmy wyniki
-        if self._dm_requested:
-            final_result = self.decision_maker.combine_parallel_results(results)
+        if self.dm_requested:
+            return self.decision_maker.combine_parallel_results(results)
         else:
-            final_result = self._default_parallel_decision(results)
-
-        return final_result
+            return self._default_parallel_decision(results)
 
     def _run_filter_in_parallel_mode(self, filtr: BaseFilter, original_text: str) -> FilterResult:
         """
-        Pomocnicza metoda do trybu równoległego:
-        - Tworzymy na chwilę LOCALNY context, żeby wykonać wielokrotne
-          próby sanitizacji dla JEDNEGO filtra.
-        - Jeśli po max_sanitize_attempts filtr wciąż chce sanitize -> block.
-        - Zwracamy ostateczny FilterResult (może być allow / block lub sanitize
-          przy założeniu, że sanitize finalnie się 'udaje' w trakcie prób).
-          W praktyce w proponowanej logice, jeśli da się oczyścić, to ostatecznie
-          dostaniemy 'allow' – bo po skutecznej sanitizacji filtr powinien
-          już powiedzieć 'allow'.
+        Applies a single filter with sanitization in parallel execution mode.
+
+        Creates an isolated context and runs sanitize cycles as needed.
+
+        Args:
+            filtr (BaseFilter): The filter instance to execute.
+            original_text (str): The original unaltered input text.
+
+        Returns:
+            FilterResult: Final result after applying filter and possible sanitization.
         """
         local_context = Context(original_text)
         return self._run_filter_with_sanitization_cycle(filtr, local_context)
 
     def _run_filter_with_sanitization_cycle(self, filtr: BaseFilter, context: Context) -> FilterResult:
+        """
+        Runs a filter and applies sanitization if required until a final decision is reached.
 
+        Repeats sanitization and re-execution for a fixed number of attempts, blocking content
+        if it still requires sanitization afterward.
+
+        Args:
+            filtr (BaseFilter): The filter to execute.
+            context (Context): The filtering context, including current text.
+
+        Returns:
+            FilterResult: Final outcome after possible sanitization attempts.
+        """
         data_sanitizer = DataSanitizer()
 
         for attempt in range(self.max_sanitize_attempts):
             result = filtr.run_filter(context)
-            if result.verdict == "block":
-                return result  # natychmiast blokujemy
-            elif result.verdict == "allow":
-                return result  # jest OK
+            if result.verdict in ("allow", "block"):
+                return result
             elif result.verdict == "sanitize":
-                # Wyciągamy z metadanych filtrów ewentualną już zanonimizowaną treść
-                possible_sanitized_text = result.metadata.get("sanitized_text", None)
+                possible_sanitized_text = result.metadata.get("sanitized_text")
+
                 if not possible_sanitized_text:
-                    # Jeśli filtr powiedział "sanitize", ale nie podał
-                    # jak zsanityzować – sanitizujemy przez DataSanitizer (o ile ma sens).
                     possible_sanitized_text = data_sanitizer.sanitize(
-                        original_text=context.current_text, 
+                        original_text=context.current_text,
                         filters_results=[result]
                     )
-                # Aktualizujemy kontekst
+
                 context.current_text = possible_sanitized_text
 
-        # Po wyczerpaniu pętli próbujemy jeszcze raz ostatni raz wywołać filtr:
         final_check = filtr.run_filter(context)
-        if self._mode == "serial" and final_check.verdict == "sanitize":
-            # Jeśli dalej sanitize -> ostatecznie block
+        if self.mode == "serial" and final_check.verdict == "sanitize":
             return FilterResult(
                 verdict="block",
                 reason="Exceeded max_sanitize_attempts; still requires sanitization."
             )
-        else:
-            return final_check
+        return final_check
 
     def _default_parallel_decision(self, results: List[FilterResult]) -> FilterResult:
         """
-        Domyślna decyzja w trybie parallel, jeśli nie korzystamy z DM.
-        Zasada: "najbardziej restrykcyjny" werdykt.
+        Aggregates filter results in parallel mode without a DecisionMaker.
+
+        Prioritizes outcomes based on severity: block > sanitize > allow.
+
+        Args:
+            results (List[FilterResult]): Collection of results from parallel filter execution.
+
+        Returns:
+            FilterResult: Most severe verdict among all results.
         """
-        # 1. Jeśli któryś blokuje -> block
         for r in results:
             if r.verdict == "block":
                 return r
-        # 2. Jeśli któryś sanitize -> sanitize
         for r in results:
             if r.verdict == "sanitize":
                 return r
-        # 3. Inaczej -> allow
         return FilterResult(verdict="allow")
