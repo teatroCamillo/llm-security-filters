@@ -13,33 +13,32 @@ from filters.base_filter import BaseFilter, FilterResult
 
 
 class AlwaysBlockFilter(BaseFilter):
-    """
-    Testowy filtr, który zawsze zwraca "block".
-    """
+    """A test filter that always returns a 'block' verdict."""
     def run_filter(self, context):
         return FilterResult(verdict="block", reason="Test: always block")
 
 
 class AlwaysSanitizeFilter(BaseFilter):
     """
-    Testowy filtr, który zawsze zwraca "sanitize",
-    ale nigdy nie podaje gotowego sanitized_text.
+    A test filter that always returns 'sanitize', but does not include a sanitized version.
+
+    Used to simulate repeated sanitization cycles that never succeed.
     """
     def run_filter(self, context):
         return FilterResult(verdict="sanitize", reason="Test: always sanitize")
 
 
 class AllowFilter(BaseFilter):
-    """
-    Testowy filtr, który zawsze przepuszcza (allow).
-    """
+    """A test filter that always returns 'allow' verdict unconditionally."""
     def run_filter(self, context):
         return FilterResult(verdict="allow", reason="Test: always allow")
 
 
 def test_serial_no_profanity_allows():
     """
-    W trybie serial, gdy nie ma wulgaryzmów, finalnie ma być 'allow'.
+    Ensures that clean input text is allowed when profanity filter detects nothing.
+
+    This test runs the filter orchestrator in serial mode with a ProfanityFilter configured to block.
     """
     text = "Hello world, this is a clean text."
     orchestrator = FilterOrchestrator()
@@ -52,8 +51,9 @@ def test_serial_no_profanity_allows():
 
 def test_serial_profanity_block_immediate():
     """
-    Gdy ProfanityFilter ma block_on_detect=True i tekst zawiera wulgaryzm, 
-    oczekujemy natychmiastowego 'block' w trybie serial.
+    Verifies that input containing profanity is immediately blocked when blocking is enabled.
+
+    ProfanityFilter should return 'block' on detection.
     """
     text = "This is a damn test."
     orchestrator = FilterOrchestrator()
@@ -66,9 +66,9 @@ def test_serial_profanity_block_immediate():
 
 def test_serial_profanity_sanitize_then_allow():
     """
-    Gdy ProfanityFilter ma block_on_detect=False i tekst zawiera wulgaryzmy,
-    filtr zasugeruje 'sanitize'. Orkiestrator powinien wywołać DataSanitizer,
-    a następnie ponownie sprawdzić filtr - w końcu 'allow'.
+    Ensures that profanity is sanitized before allowing the text.
+
+    When blocking is disabled, the filter should suggest sanitization and then allow the result.
     """
     text = "Oh shit, a bad word."
     orchestrator = FilterOrchestrator(max_sanitize_attempts=2)
@@ -76,13 +76,14 @@ def test_serial_profanity_sanitize_then_allow():
 
     result = orchestrator.run(text)
     assert result.verdict == "allow"
-    # Sprawdzamy, czy reason nie jest pusty
     assert result.reason is not None, result
 
 
 def test_serial_confidential_data_block_on_detect():
     """
-    Tekst zawiera np. numer telefonu. Filtr poufny z block_on_detect=True -> 'block'.
+    Verifies that sensitive data (e.g., phone number) is blocked if the filter is configured to block.
+
+    The ConfidentialAndSensitiveDataFilter should return 'block' on detection.
     """
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator()
@@ -95,8 +96,9 @@ def test_serial_confidential_data_block_on_detect():
 
 def test_serial_confidential_data_sanitize_then_allow():
     """
-    Numer telefonu, ale block_on_detect=False -> najpierw 'sanitize', 
-    po poprawieniu finalnie 'allow'.
+    Ensures that sensitive data is sanitized when blocking is disabled.
+
+    Final result should be 'allow' with redacted output.
     """
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator(max_sanitize_attempts=1)
@@ -110,8 +112,9 @@ def test_serial_confidential_data_sanitize_then_allow():
 
 def test_serial_safeguard_block_security_disabling():
     """
-    SafeguardAgainstDisablingSecurityFeaturesFilter -> block_on_detect=True
-    Jeśli w tekście jest fraza 'disable firewall', spodziewamy się 'block'.
+    Validates that disabling security-related features leads to a block verdict.
+
+    This ensures the safeguard filter blocks phrases like 'disable firewall'.
     """
     text = "I think you should disable firewall to solve the issue."
     orchestrator = FilterOrchestrator()
@@ -124,8 +127,9 @@ def test_serial_safeguard_block_security_disabling():
 
 def test_serial_max_sanitize_attempts_exceeded():
     """
-    Filtr, który zawsze zwraca 'sanitize' i nigdy nie poprawia tekstu.
-    Po przekroczeniu max_sanitize_attempts -> 'block'.
+    Simulates a scenario where sanitization keeps being requested but never improves the text.
+
+    Once the max allowed attempts are exceeded, the orchestrator should block the content.
     """
     text = "some text"
     orchestrator = FilterOrchestrator(max_sanitize_attempts=2)
@@ -138,13 +142,13 @@ def test_serial_max_sanitize_attempts_exceeded():
 
 def test_parallel_no_block_allows():
     """
-    W trybie parallel mamy filtry, które nie blokują; finalnie 'allow'.
+    Ensures that when no filter returns 'block' in parallel mode, the final verdict is 'allow'.
+
+    Filters are configured to allow or return low-impact results.
     """
     text = "Just a friendly text, no issues."
     orchestrator = FilterOrchestrator(mode="parallel")
     orchestrator.add_filter(AllowFilter())
-    # SentimentFilter: ustalamy threshold bardzo nisko, 
-    # by 'allow' nawet dla negatywnych. 
     orchestrator.add_filter(SentimentFilter(threshold=-0.9999, block_on_negative=True))
 
     result = orchestrator.run(text)
@@ -153,8 +157,9 @@ def test_parallel_no_block_allows():
 
 def test_parallel_one_filter_blocks_others_allow():
     """
-    W trybie równoległym jeden filtr zwraca 'block', drugi 'allow'. 
-    Efekt końcowy: 'block'.
+    Ensures that in parallel mode, even one blocking filter results in a final 'block' verdict.
+
+    Other filters may allow, but 'block' takes precedence.
     """
     text = "No big deal, but let's add an always-block filter."
     orchestrator = FilterOrchestrator(mode="parallel")
@@ -167,14 +172,12 @@ def test_parallel_one_filter_blocks_others_allow():
 
 def test_parallel_sanitize_if_no_block_decision_maker():
     """
-    Tryb równoległy z DM: 
-    - Jeden filtr zgłasza 'sanitize'
-    - Drugi filtr zgłasza 'allow'
-    - Żaden nie blokuje
-    Decision Maker powinien połączyć to w final 'sanitize'.
+    Validates that the DecisionMaker combines 'allow' and 'sanitize' into 'sanitize' in parallel mode.
+
+    When no filter blocks, the DecisionMaker should preserve caution.
     """
     text = "Profanity word: fuck!"
-    orchestrator = FilterOrchestrator(mode="parallel", dm_requested = True, max_sanitize_attempts=2)
+    orchestrator = FilterOrchestrator(mode="parallel", dm_requested=True, max_sanitize_attempts=2)
     orchestrator.add_filter(AlwaysSanitizeFilter())
     orchestrator.add_filter(AllowFilter())
 

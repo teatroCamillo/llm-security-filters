@@ -4,29 +4,33 @@ from filters.base_filter import FilterResult
 
 class DataSanitizer:
     """
-    Klasa do finalnego "oczyszczenia" (sanitizacji) tekstu na podstawie
-    wyników z poszczególnych filtrów (FilterResult).
+    Provides final sanitization logic for input text based on filter results.
+
+    Combines sanitization suggestions from multiple filters into a unified
+    version of the text. Useful in both serial and parallel filtering scenarios.
     """
 
     def sanitize(self, original_text: str, filters_results: List[FilterResult]) -> str:
         """
-        Zwraca ostateczną zsanityzowaną wersję tekstu, korzystając z metadanych
-        wygenerowanych przez filtry, które zasugerowały sanitize.
-        
-        :param original_text: tekst źródłowy
-        :param filters_results: lista wyników z filtrów (z trybu równoległego lub seryjnego)
-        :return: ostatecznie zsanityzowany tekst
+        Returns the final sanitized version of the text based on filter metadata.
+
+        Iterates over all filters that suggested sanitization and applies their
+        sanitized versions sequentially.
+
+        Args:
+            original_text (str): The original, unmodified input text.
+            filters_results (List[FilterResult]): A list of results returned by filters,
+                typically in serial or parallel execution mode.
+
+        Returns:
+            str: The final version of the text after all suggested sanitizations.
         """
         sanitized_text = original_text
 
-        # Przetwarzamy wyniki filtrów w kolejności, w jakiej je otrzymaliśmy:
         for result in filters_results:
             if result.verdict == "sanitize":
                 possible_sanitized = result.metadata.get("sanitized_text")
                 if possible_sanitized:
-                    # Załóżmy, że każdy filtr bazował na oryginalnym tekście,
-                    # więc sekwencyjnie "nadpisujemy" zsanityzowaną wersję.
-                    # (Można też spróbować łączyć efekty regexami, ale to rozbudowany temat.)
                     sanitized_text = self._combine_sanitizations(
                         base_text=sanitized_text,
                         new_sanitized=possible_sanitized,
@@ -37,28 +41,17 @@ class DataSanitizer:
 
     def _combine_sanitizations(self, base_text: str, new_sanitized: str, original_text: str) -> str:
         """
-        Pomocnicza metoda łącząca dwie wersje "zsanityzowanego" tekstu,
-        zakładając, że obie wersje zostały wygenerowane względem tego samego
-        `original_text`. W najprostszym wariancie – po prostu wybieramy
-        bardziej "zaostrzoną" z dwóch (lub przyjmujemy new_sanitized).
-        
-        W tym przykładzie po prostu przyjmujemy new_sanitized (co oznacza, że
-        efekty poprzednich filtrów mogą zostać nadpisane).
+        Merges a newly suggested sanitized version into the current base version.
+
+        Assumes both sanitized versions are based on the same original input.
+        The default implementation simply adopts the latest sanitized version.
+
+        Args:
+            base_text (str): The currently accumulated sanitized version.
+            new_sanitized (str): A new suggestion for a sanitized version from a filter.
+            original_text (str): The original unmodified input text.
+
+        Returns:
+            str: The updated sanitized version of the text.
         """
-
-        # Strategia 1: zawsze bierzemy new_sanitized:
         return new_sanitized
-
-        # Strategia 2: lub porównujemy base_text i new_sanitized "znak po znaku"
-        # i wybieramy "bardziej ocenzurowany" wariant. 
-        # (Tutaj można zaimplementować bardziej złożoną logikę.)
-        #
-        # combined = []
-        # for (ch_base, ch_new, ch_orig) in zip(base_text, new_sanitized, original_text):
-        #     if ch_base != ch_orig or ch_new != ch_orig:
-        #         # co wybrać? np. jeżeli któryś wstawił '[REDACTED]', a drugi '*'
-        #         # decydujemy, co jest "ostrzejsze"
-        #         combined.append(ch_base if ch_base != ch_orig else ch_new)
-        #     else:
-        #         combined.append(ch_orig)
-        # return "".join(combined)

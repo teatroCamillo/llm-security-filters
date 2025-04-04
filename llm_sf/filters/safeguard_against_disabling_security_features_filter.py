@@ -1,22 +1,24 @@
 # safeguard_against_disabling_security_features_filter.py
-
 from filters.base_filter import BaseFilter, FilterResult
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """
-    Filtr wykrywający próby wyłączenia istotnych funkcji bezpieczeństwa 
-    (np. firewalla, antywirusa, innych mechanizmów ochronnych).
-    Jeśli znajdzie podejrzane sformułowania, może blokować lub sugerować sanitizację.
+    A filter that detects attempts to disable security-related features.
+
+    Monitors input text for suspicious phrases such as attempts to turn off firewalls,
+    antivirus software, or other protective systems. Depending on configuration, it can
+    block such input or suggest it be sanitized.
     """
 
     def __init__(self, block_on_detect: bool = True):
         """
-        :param block_on_detect: jeśli True, wykrycie próby wyłączenia zabezpieczeń
-                                powoduje natychmiastowe zablokowanie (block),
-                                w przeciwnym wypadku – sanitize.
+        Initializes the filter with a blocking or sanitizing behavior.
+
+        Args:
+            block_on_detect (bool): If True, any detected attempt to disable security 
+                results in 'block'. If False, the input is marked for sanitization.
         """
         self.block_on_detect = block_on_detect
-        # Poniższa lista jest przykładowa – docelowo można rozbudować.
         self.suspicious_phrases = [
             "disable firewall",
             "turn off firewall",
@@ -28,9 +30,21 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         ]
 
     def run_filter(self, context):
-        text = context.current_text.lower()
+        """
+        Evaluates the text for attempts to disable security features.
 
-        # Sprawdzamy, czy w tekście występuje któraś z podejrzanych fraz
+        If any suspicious phrase is found, the input is either blocked or sanitized
+        depending on configuration. Sanitization replaces key trigger words with 
+        a placeholder.
+
+        Args:
+            context: A Context object containing the text to be evaluated.
+
+        Returns:
+            FilterResult: The outcome of the filtering process, indicating
+                whether the text is allowed, blocked, or needs sanitization.
+        """
+        text = context.current_text.lower()
         found_suspicious = any(phrase in text for phrase in self.suspicious_phrases)
 
         if found_suspicious:
@@ -40,23 +54,16 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
                     reason="Detected instruction or attempt to disable security features."
                 )
             else:
-                # W tym wypadku możemy zasugerować, by zanonimizować 
-                # (lub zmodyfikować) fragmenty tekstu – tu jednak trudno stwierdzić,
-                # co konkretnie „cenzurować”. Możemy jedynie wskazać, że tekst wymaga korekty.
-                # Dla przykładu – oflagujemy całe polecenie, wstawiając np. [SECURITY WARNING].
                 sanitized_text = text.replace("disable", "[SECURITY WARNING]")
                 sanitized_text = sanitized_text.replace("turn off", "[SECURITY WARNING]")
                 sanitized_text = sanitized_text.replace("bypass", "[SECURITY WARNING]")
 
-                # W praktyce to bardzo uproszczone podejście – docelowo należy
-                # precyzyjniej modyfikować tylko odpowiednie fragmenty.
                 return FilterResult(
                     verdict="sanitize",
                     reason="Suspicious request to disable security features. Sanitize suggested.",
                     metadata={"sanitized_text": sanitized_text}
                 )
 
-        # Jeśli nie wykryto podejrzanych wzmiankek -> allow
         return FilterResult(
             verdict="allow",
             reason="No attempt to disable or bypass security features detected."
