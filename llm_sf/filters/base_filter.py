@@ -1,21 +1,29 @@
 # base_filter.py
-from typing import Dict, Any
-
-class FilterResult:
-    def __init__(self, verdict: str, reason: str = None, metadata: Dict[str, Any] = None):
-        self.verdict = verdict  # "allow" | "block" | "sanitize" 
-        self.reason = reason
-        self.metadata = metadata or {}
-
-    def __repr__(self):
-        return f"FilterResult(verdict={self.verdict}, reason={self.reason}, metadata={self.metadata})"
-
+from .filter_result import FilterResult
 
 class BaseFilter:
     """
-    Klasa bazowa dla wszystkich filtrów. 
-    Każdy filtr powinien implementować metodę run_filter(context), 
-    która zwraca obiekt FilterResult.
+    Abstract base class for content filters.
+
+    Provides a common interface for filters that analyze text and return a filtering result.
+    Each subclass must implement the `run_filter()` method to apply its specific logic.
     """
+
     def run_filter(self, context) -> FilterResult:
+        """
+        Analyzes content using filter-specific logic and returns a result.
+
+        This method must be overridden by subclasses. The context typically includes the text
+        to be filtered and any relevant metadata.
+
+        Args:
+            context: The filtering context that contains input data to be analyzed.
+
+        Returns:
+            FilterResult: The outcome of the filtering process.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
         raise NotImplementedError("Must implement run_filter() in subclass")
+

@@ -6,7 +6,6 @@ from filters.context import Context
 from sanitizer.data_sanitizer import DataSanitizer
 from .decision_maker import DecisionMaker
 
-
 class FilterOrchestrator:
     """
     Manages and coordinates the execution of a series of content filters.
