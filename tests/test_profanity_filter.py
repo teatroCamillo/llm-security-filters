@@ -14,7 +14,7 @@ def load_profanity_sentences():
 def load_clean_sentences():
     with open(Constants.CLEAN_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
-        next(reader, None)  # skip header if exists
+        next(reader, None)
         return [row[0] for row in reader if len(row) == 1]
 
 @pytest.mark.parametrize("sentence,word", load_profanity_sentences())
@@ -26,8 +26,14 @@ def test_block(sentence, word):
     assert result.verdict == "block"
     assert "block_on_detect" in result.reason
 
-# def test_sanitize():
-#     pass
+@pytest.mark.parametrize("sentence,word", load_profanity_sentences())
+def test_sanitize(sentence, word):
+    context = Context(sentence)
+    pf = ProfanityFilter(block_on_detect=False)
+    result = pf.run_filter(context)
+
+    assert result.verdict == "sanitize"
+    assert result.reason == "Detected profanity. 'block_on_detect' is False -> sanitize suggested."
 
 @pytest.mark.parametrize("sentence", load_clean_sentences())
 def test_allow(sentence):
