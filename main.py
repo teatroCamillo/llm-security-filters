@@ -11,7 +11,7 @@ def main():
     # Create a single Orchestrator instance.
     # You may add or configure filters separately if needed.
     orchestrator = FilterOrchestrator(mode="serial")
-    orchestrator.add_filter(ProfanityFilter(block_on_detect=True))
+    orchestrator.add_filter(ProfanityFilter())
 
     print("Simple console chat with llama3.2 (example). Type Ctrl+C or an empty line to exit.\n")
 
