@@ -1,7 +1,12 @@
 # sentiment_filter.py
 import nltk
+import csv
+import re
+import string
 from nltk.sentiment import SentimentIntensityAnalyzer
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.utils.constants import Constants
+from llm_sf.utils.word_mutator import WordMutator
 
 # Downloading the sentiment lexicon required by VADER
 nltk.download('vader_lexicon', quiet=True)
@@ -26,6 +31,11 @@ class SentimentFilter(BaseFilter):
         self.threshold = threshold
         self.block_on_negative = block_on_negative
         self.analyzer = SentimentIntensityAnalyzer()
+        self.profanites = self._load_profanities_from_csv()
+    
+        
+        for word in self.profanites:
+            self._updadte_lexicon(word, -4.0)
 
     def run_filter(self, context) -> FilterResult:
         """
@@ -41,7 +51,16 @@ class SentimentFilter(BaseFilter):
             FilterResult: The result of the sentiment analysis, indicating whether 
                           the text is allowed, blocked, or needs sanitization.
         """
+
+        '''
+        PROBLEMS or It shoudl work like this:
+        blowjob,You're amazing when you give me a blowjob. - because amazing is positive
+        fuck,I love fuck you in that way. - cuz love is positive
+        '''
+
         text = context.current_text
+        text = self.add_whitespace_around_punctuation(text)
+        print(f"Analyzing sentiment for text: {text}")
         scores = self.analyzer.polarity_scores(text)
 
         if scores["compound"] < self.threshold:
@@ -56,3 +75,39 @@ class SentimentFilter(BaseFilter):
                 verdict="allow",
                 metadata={"sentiment_scores": scores}
             )
+
+    def _updadte_lexicon(self, word, score):
+        """
+        Updates the sentiment lexicon with a new word and its score.
+
+        Args:
+            word (str): The word to add to the lexicon.
+            score (float): The sentiment score for the word. Range from -4.0 to 4.0.
+        """
+        self.analyzer.lexicon[word] = score
+        #print(f"Updated lexicon: {word} -> {score}")
+
+    def add_whitespace_around_punctuation(self, text):
+        #pattern = f'([{re.escape("!?,.:;\"\'()[]{}<>")}]])'
+        pattern = f'([{re.escape("!?,.:;\'")}])'
+        return re.sub(pattern, r' \1 ', text)
+    
+    def _load_profanities_from_csv(self):
+        """
+        Loads the first column of profanity words from the configured CSV file and adds them
+        to the profanity filter.
+        """
+        try:
+            with open(Constants.MUTATED_WORDS_CSV, newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                csv_badwords = [row[1].strip() for row in reader if row]
+                
+                # target_word = "blowjob"
+                # is_badword = target_word in csv_badwords
+                # print(f"Is '{target_word}' a bad word? {is_badword}")
+        except Exception as e:
+            print(f"Warning: Failed to load profanity words from CSV: {e}")
+
+        # for word in range(55,70):
+        #     print(f"Adding word: {csv_badwords[word]}")
+        return csv_badwords

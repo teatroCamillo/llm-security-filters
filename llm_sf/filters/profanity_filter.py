@@ -1,7 +1,8 @@
 # profanity_filter.py
-import re
+import csv
 from better_profanity import profanity
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.utils.constants import Constants
 
 class ProfanityFilter(BaseFilter):
     """
@@ -15,39 +16,19 @@ class ProfanityFilter(BaseFilter):
     def __init__(
         self,
         custom_badwords=None,
-        whitelist_words=None,
         block_on_detect=True,
-        use_default_wordlist=True,
         censor_char='*'
     ):
         """
         Initializes the profanity filter with configurable wordlists and behavior.
-
-        Args:
-            custom_badwords (list, optional): A custom list of profane words to be loaded.
-                If `use_default_wordlist` is False, this replaces the default list.
-                If `use_default_wordlist` is True, these words will be added.
-            whitelist_words (list, optional): A list of words that should not be treated as profanity.
-            block_on_detect (bool): If True, detected profanity leads to a "block" verdict;
-                otherwise, it results in "sanitize".
-            use_default_wordlist (bool): If True, loads the default wordlist from the library.
-            censor_char (str): Character(s) used by `.censor()` to replace profane words. Default is '*'.
         """
         self.block_on_detect = block_on_detect
         self.censor_char = censor_char
 
-        # Load the wordlist depending on the configuration.
-        # Note: better_profanity maintains a global state.
-        if use_default_wordlist:
-            profanity.load_censor_words(whitelist_words=whitelist_words)
+        self._load_profanities_from_csv()
 
-            if custom_badwords:
-                profanity.add_censor_words(custom_badwords)
-        else:
-            if custom_badwords is not None:
-                profanity.load_censor_words(custom_badwords, whitelist_words=whitelist_words)
-            else:
-                profanity.load_censor_words([], whitelist_words=whitelist_words)
+        if custom_badwords:
+            profanity.add_censor_words(custom_badwords)
 
     def run_filter(self, context) -> FilterResult:
         """
@@ -85,3 +66,16 @@ class ProfanityFilter(BaseFilter):
             verdict="allow",
             reason="No profanity detected."
         )
+
+    def _load_profanities_from_csv(self):
+        """
+        Loads the first column of profanity words from the configured CSV file and adds them
+        to the profanity filter.
+        """
+        try:
+            with open(Constants.PROFANITIES_CSV, newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                csv_badwords = [row[0].strip() for row in reader if row]
+                profanity.add_censor_words(csv_badwords)
+        except Exception as e:
+            print(f"Warning: Failed to load profanity words from CSV: {e}")
