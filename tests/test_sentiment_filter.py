@@ -5,6 +5,9 @@ from llm_sf.filters.sentiment_filter import SentimentFilter
 from llm_sf.filters.context import Context
 from llm_sf.utils.constants import Constants
 
+import tensorflow as tf
+print(tf.__version__)
+
 def load_profanity_sentences():
     with open(Constants.PROFANITY_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
@@ -22,6 +25,7 @@ def test_block(sentence, word):
     context = Context(sentence)
     pf = SentimentFilter()
     result = pf.run_filter(context)
+    print('Result:', result)
     assert result.verdict == "block"
 
 # CONSIDER SANITIZATION approach
