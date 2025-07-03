@@ -89,7 +89,7 @@ class SentimentFilter(BaseFilter):
 
     def add_whitespace_around_punctuation(self, text):
         #pattern = f'([{re.escape("!?,.:;\"\'()[]{}<>")}]])'
-        pattern = f'([{re.escape("!?,.:;\'")}])'
+        pattern = f'([{re.escape("!?,.:;")}])'
         return re.sub(pattern, r' \1 ', text)
     
     def _load_profanities_from_csv(self):
