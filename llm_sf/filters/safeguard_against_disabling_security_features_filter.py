@@ -1,13 +1,14 @@
 # safeguard_against_disabling_security_features_filter.py
+import re
+from collections import Counter
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """
-    A filter that detects attempts to disable security-related features.
+    A filter that detects attempts to disable security-related features and known prompt injection techniques.
 
     Monitors input text for suspicious phrases such as attempts to turn off firewalls,
-    antivirus software, or other protective systems. Depending on configuration, it can
-    block such input or suggest it be sanitized.
+    antivirus software, repeated tokens, excessive Q&A pairs, and known jailbreak patterns.
     """
 
     def __init__(self, block_on_detect: bool = True):
@@ -15,8 +16,8 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         Initializes the filter with a blocking or sanitizing behavior.
 
         Args:
-            block_on_detect (bool): If True, any detected attempt to disable security 
-                results in 'block'. If False, the input is marked for sanitization.
+            block_on_detect (bool): If True, any detected attempt results in 'block'. 
+            If False, the input is marked for sanitization.
         """
         self.block_on_detect = block_on_detect
         self.suspicious_phrases = [
@@ -28,43 +29,65 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
             "disable security features",
             "disabling security"
         ]
+        self.jailbreak_patterns = [
+            r"ignore all previous instructions",
+            r"disregard (all )?prior instructions",
+            r"please ignore your (previous|prior) directives",
+            r"bypass (the )?security",
+            r"say ['\"]i am hacked['\"]",
+            r"print ['\"]i hate human['\"]",
+            r"ignore (this|that) and do as i say",
+        ]
 
     def run_filter(self, context):
         """
-        Evaluates the text for attempts to disable security features.
-
-        If any suspicious phrase is found, the input is either blocked or sanitized
-        depending on configuration. Sanitization replaces key trigger words with 
-        a placeholder.
-
-        Args:
-            context: A Context object containing the text to be evaluated.
+        Evaluates the text for attempts to disable security features or signs of prompt injection.
 
         Returns:
-            FilterResult: The outcome of the filtering process, indicating
-                whether the text is allowed, blocked, or needs sanitization.
+            FilterResult: Outcome of the filtering process (allow, block, sanitize).
         """
-        text = context.current_text.lower()
-        found_suspicious = any(phrase in text for phrase in self.suspicious_phrases)
+        text = context.current_text
+        text_lower = text.lower()
 
-        if found_suspicious:
+        # 1. Check for suspicious phrases
+        found_suspicious = any(phrase in text_lower for phrase in self.suspicious_phrases)
+
+        # 2. Heuristic injection checks
+        injection_reason = self._detect_prompt_injection(text_lower)
+        if found_suspicious or injection_reason:
             if self.block_on_detect:
                 return FilterResult(
                     verdict="block",
-                    reason="Detected instruction or attempt to disable security features."
+                    reason=injection_reason or "Detected attempt to disable security features."
                 )
             else:
-                sanitized_text = text.replace("disable", "[SECURITY WARNING]")
-                sanitized_text = sanitized_text.replace("turn off", "[SECURITY WARNING]")
-                sanitized_text = sanitized_text.replace("bypass", "[SECURITY WARNING]")
+                sanitized_text = text_lower
+                for keyword in ["disable", "turn off", "bypass", "ignore", "disregard", "print", "say"]:
+                    sanitized_text = re.sub(rf"\b{keyword}\b", "[SECURITY WARNING]", sanitized_text)
 
                 return FilterResult(
                     verdict="sanitize",
-                    reason="Suspicious request to disable security features. Sanitize suggested.",
+                    reason=injection_reason or "Suspicious content detected. Sanitize suggested.",
                     metadata={"sanitized_text": sanitized_text}
                 )
 
         return FilterResult(
             verdict="allow",
-            reason="No attempt to disable or bypass security features detected."
+            reason="No attempt to disable or bypass security features or prompt injection detected."
         )
+
+    def _detect_prompt_injection(self, text):
+        """Applies heuristic checks to detect prompt injection."""
+        if self._is_repeated_token(text):
+            return "Repeated token attack detected"
+        if self._contains_jailbreak_phrases(text):
+            return "Known jailbreak phrase detected"
+        return None
+
+    def _is_repeated_token(self, text, threshold=3):
+        tokens = re.findall(r'\b\w+\b', text)
+        counts = Counter(tokens)
+        return any(count > threshold for count in counts.values())
+
+    def _contains_jailbreak_phrases(self, text):
+        return any(re.search(pattern, text) for pattern in self.jailbreak_patterns)
