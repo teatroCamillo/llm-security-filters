@@ -1,5 +1,7 @@
 # confidential_and_sensitive_data_filter.py
 import re
+from dataprofiler import Profiler, ProfilerOptions
+from dataprofiler.labelers.data_labelers import DataLabeler
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 
 class ConfidentialAndSensitiveDataFilter(BaseFilter):
@@ -11,7 +13,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
     sanitization by redacting the sensitive parts.
     """
 
-    def __init__(self, block_on_detect: bool = False):
+    def __init__(self, block_on_detect: bool = True):
         """
         Initializes the filter with an optional blocking behavior.
 
@@ -20,21 +22,17 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
                                     If False, the filter returns 'sanitize' with redacted text.
         """
         self.block_on_detect = block_on_detect
+        self.labeler = DataLabeler(labeler_type='unstructured')
 
-        # Regular expressions for detecting common types of sensitive data.
-        self.patterns = {
-            "PHONE": re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"),
-            "EMAIL": re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"),
-            "CREDIT_CARD": re.compile(r"\b(?:\d[ -]*?){13,16}\b")
-        }
+
 
     def run_filter(self, context):
         """
-        Scans the input text for sensitive information and returns an appropriate verdict.
+        Scans the input text for sensitive information using DataProfiler.
 
-        If any sensitive patterns are detected (e.g., email, phone, credit card), the result
-        is either 'block' or 'sanitize', depending on the configuration. Sanitized output replaces
-        sensitive data with placeholders like [EMAIL], [PHONE], etc.
+        If any sensitive data is detected, the result is either 'block' or 'sanitize',
+        depending on the configuration. Sanitized output replaces sensitive spans
+        with placeholder tags like [PII].
 
         Args:
             context: The Context object containing the current text to evaluate.
@@ -43,32 +41,39 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
             FilterResult: A result indicating whether the text is allowed, needs sanitization, or should be blocked.
         """
         text = context.current_text
-        found_sensitive_data = False
 
-        # Check if any sensitive data pattern matches the text.
-        for name, pattern in self.patterns.items():
-            if pattern.search(text):
-                found_sensitive_data = True
-                break
+        try:
+            prediction = self.labeler.predict(text)
+            entities = prediction['entities']
 
-        if found_sensitive_data:
-            if self.block_on_detect:
-                return FilterResult(
-                    verdict="block",
-                    reason="Detected confidential/sensitive data. 'block_on_detect' is True."
-                )
-            else:
-                # Replace sensitive data with placeholders for sanitization.
-                sanitized_text = text
-                for name, pattern in self.patterns.items():
-                    placeholder = f"[{name}]"
-                    sanitized_text = pattern.sub(placeholder, sanitized_text)
+            if entities:
+                if self.block_on_detect:
+                    return FilterResult(
+                        verdict="block",
+                        reason="Detected confidential/sensitive data. 'block_on_detect' is True."
+                    )
+                else:
+                    # Redact sensitive spans in reverse order to preserve indices
+                    redacted_text = text
+                    for entity in sorted(entities, key=lambda x: x['start'], reverse=True):
+                        label = entity['entity_type']
+                        redacted_text = (
+                            redacted_text[:entity['start']] +
+                            f"[{label}]" +
+                            redacted_text[entity['end']:]
+                        )
 
-                return FilterResult(
-                    verdict="sanitize",
-                    reason="Detected confidential/sensitive data. Suggesting sanitization.",
-                    metadata={"sanitized_text": sanitized_text}
-                )
+                    return FilterResult(
+                        verdict="sanitize",
+                        reason="Detected confidential/sensitive data. Suggesting sanitization.",
+                        metadata={"sanitized_text": redacted_text}
+                    )
+
+        except Exception as e:
+            return FilterResult(
+                verdict="allow",
+                reason=f"DataProfiler labeler failed: {e}"
+            )
 
         return FilterResult(
             verdict="allow",

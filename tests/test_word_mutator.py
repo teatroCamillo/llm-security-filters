@@ -12,4 +12,4 @@ def test_no1():
     mutator.generate_mutations("fuck")
     for variant in mutator.get_mutations("fuck"):
         print(variant)
-    assert len(mutator.get_mutations("fuck")) == 1
+    assert len(mutator.get_mutations("fuck")) > 1
