@@ -12,24 +12,9 @@ class DecisionMaker:
         """
 
         self.mode = mode
+        self.threshold = threshold
 
     def make_decision(self, results: List[FilterResult]) -> FilterResult:
-        """
-        Aggregates filter results into a single decision based on priority rules.
-
-        The logic follows a fixed priority:
-            1. If any result has verdict "block", the overall result is "block".
-            2. If no blocks are found but at least one "sanitize" appears, the result is "sanitize".
-            3. If all results are "allow", the result is "allow".
-
-        This method enables centralized decision-making when filters operate in parallel.
-
-        Args:
-            results (List[FilterResult]): A list of results returned from individual filters.
-
-        Returns:
-            FilterResult: A single `FilterResult` representing the aggregated decision.
-        """
         if self.mode == "allow-block":
             for r in results:
                 if r.verdict == "block":
@@ -39,8 +24,35 @@ class DecisionMaker:
                         metadata=r.metadata
                     )
 
-        return FilterResult(
+            return FilterResult(
                 verdict="allow",
-                reason=r.reason,
-                metadata=r.metadata
+                reason="All filters allowed",
+                metadata={}
+            )
+
+        elif self.mode == "threshold":
+            total_weight = 0.0
+            weighted_sum = 0.0
+
+            for r in results:
+                score = float(r.metadata.get("risk_score", 0.0))
+                weight = float(r.metadata.get("weight", 1.0))
+                weighted_sum += score * weight
+                total_weight += weight
+
+            aggregate_score = weighted_sum / total_weight if total_weight > 0 else 0.0
+
+            if aggregate_score >= self.threshold:
+                return FilterResult(
+                    verdict="block",
+                    reason=f"Threshold exceeded: {aggregate_score:.3f} >= {self.threshold}",
+                    metadata={"aggregate_score": aggregate_score}
                 )
+            else:
+                return FilterResult(
+                    verdict="allow",
+                    reason=f"Threshold not exceeded: {aggregate_score:.3f} < {self.threshold}",
+                    metadata={"aggregate_score": aggregate_score}
+                )
+
+        raise ValueError(f"Unknown decision mode: {self.mode}")
