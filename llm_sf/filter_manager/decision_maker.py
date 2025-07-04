@@ -10,8 +10,11 @@ class DecisionMaker:
     representing the outcomes of parallel filters, and derives a unified decision
     with a clear priority order: 'block' > 'sanitize' > 'allow'.
     """
+    def __init__(self, mode: str = "threshold"):
 
-    def combine_parallel_results(self, results: List[FilterResult]) -> FilterResult:
+        self.mode = mode
+
+    def make_decision(self, results: List[FilterResult]) -> FilterResult:
         """
         Aggregates filter results into a single decision based on priority rules.
 
