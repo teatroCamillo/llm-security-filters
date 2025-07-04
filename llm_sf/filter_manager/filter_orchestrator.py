@@ -4,7 +4,7 @@ from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.filters.context import Context
 from llm_sf.sanitizer.data_sanitizer import DataSanitizer
 from llm_sf.filter_manager.decision_maker import DecisionMaker
-
+# it isn't the place to sanitize - the filter is.
 class FilterOrchestrator:
     """
     Manages and coordinates the execution of a series of content filters.
@@ -13,7 +13,7 @@ class FilterOrchestrator:
     aggregation and repeated sanitization attempts for content improvement.
     """
 
-    def __init__(self):
+    def __init__(self, dm: DecisionMaker = DecisionMaker()):
         """
         Initializes the filtering orchestrator with configuration options.
 
@@ -21,7 +21,7 @@ class FilterOrchestrator:
             max_sanitize_attempts (int): Maximum number of allowed sanitization retries.
         """
         self._filters: List[BaseFilter] = []
-        self.decision_maker = DecisionMaker()
+        self.decision_maker = dm
 
     def add_filter(self, filtr: BaseFilter):
         """
@@ -96,21 +96,6 @@ class FilterOrchestrator:
             FilterResult: Final result after applying filter and possible sanitization.
         """
         #local_context = Context(original_text)
-        result = filtr.run_filter(context)
-        if result.verdict in ("allow", "block"):
-            return result
-        elif result.verdict == "sanitize":
-            possible_sanitized_text = result.metadata.get("sanitized_text")
-
-            # if not possible_sanitized_text:
-            #     possible_sanitized_text = data_sanitizer.sanitize(
-            #         original_text=context.current_text,
-            #         filters_results=[result]
-            #     )
-
-            context.current_text = possible_sanitized_text
-
-        final_check = filtr.run_filter(context)
-        return final_check
+        return filtr.run_filter(context)
 
 

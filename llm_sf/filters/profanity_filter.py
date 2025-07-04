@@ -3,7 +3,7 @@ import csv
 from better_profanity import profanity
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.utils.constants import Constants
-
+# the filter is a place to sanitization! not orchestrator
 class ProfanityFilter(BaseFilter):
     """
     A filter responsible solely for detecting profanity using the 'better_profanity' library.
@@ -75,6 +75,7 @@ class ProfanityFilter(BaseFilter):
         try:
             with open(Constants.PROFANITIES_CSV, newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
+                next(reader)
                 csv_badwords = [row[0].strip() for row in reader if row]
                 profanity.add_censor_words(csv_badwords)
         except Exception as e:

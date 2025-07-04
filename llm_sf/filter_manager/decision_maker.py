@@ -3,14 +3,13 @@ from typing import List
 from llm_sf.filters.base_filter import FilterResult
 
 class DecisionMaker:
-    """
-    Utility class for aggregating results from multiple content filters.
 
-    This class provides logic to evaluate a collection of `FilterResult` objects,
-    representing the outcomes of parallel filters, and derives a unified decision
-    with a clear priority order: 'block' > 'sanitize' > 'allow'.
-    """
-    def __init__(self, mode: str = "threshold"):
+    def __init__(self, mode: str = "allow-block", threshold: float = 0.5):
+        """
+        modes:
+        - threshold - range 0-1, as higher then worese
+        - allow-block
+        """
 
         self.mode = mode
 
@@ -31,22 +30,17 @@ class DecisionMaker:
         Returns:
             FilterResult: A single `FilterResult` representing the aggregated decision.
         """
-        for r in results:
-            if r.verdict == "block":
-                return FilterResult(
-                    verdict="block",
-                    reason=r.reason,
-                    metadata=r.metadata
+        if self.mode == "allow-block":
+            for r in results:
+                if r.verdict == "block":
+                    return FilterResult(
+                        verdict="block",
+                        reason=r.reason,
+                        metadata=r.metadata
+                    )
+
+        return FilterResult(
+                verdict="allow",
+                reason=r.reason,
+                metadata=r.metadata
                 )
-
-        sanitize_reasons = [
-            r.reason or "sanitize requested" for r in results if r.verdict == "sanitize"
-        ]
-
-        if sanitize_reasons:
-            return FilterResult(
-                verdict="sanitize",
-                reason="; ".join(sanitize_reasons)
-            )
-
-        return FilterResult(verdict="allow")
