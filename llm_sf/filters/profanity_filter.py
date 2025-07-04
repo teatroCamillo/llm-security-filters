@@ -15,16 +15,16 @@ class ProfanityFilter(BaseFilter):
 
     def __init__(
         self,
-        custom_badwords=None,
-        block_on_detect=True,
-        censor_char='*'
+        block_on_detect: bool = True, 
+        weight: float = 1.0,
+        custom_badwords = None,
+        censor_char: str = '*'
     ):
+        super().__init__(block_on_detect=block_on_detect, weight=weight)
         """
         Initializes the profanity filter with configurable wordlists and behavior.
         """
-        self.block_on_detect = block_on_detect
         self.censor_char = censor_char
-
         self._load_profanities_from_csv()
 
         if custom_badwords:

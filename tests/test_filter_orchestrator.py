@@ -27,6 +27,10 @@ class AlwaysSanitizeFilter(BaseFilter):
 
 class AllowFilter(BaseFilter):
     """A test filter that always returns 'allow' verdict unconditionally."""
+
+    def __init__(self):
+        super().__init__()
+
     def run_filter(self, context):
         return FilterResult(verdict="allow", reason="Test: always allow")
 

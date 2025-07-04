@@ -11,7 +11,12 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     antivirus software, repeated tokens, excessive Q&A pairs, and known jailbreak patterns.
     """
 
-    def __init__(self, block_on_detect: bool = True):
+    def __init__(        
+        self,
+        block_on_detect: bool = True, 
+        weight: float = 1.0
+        ):
+        super().__init__(block_on_detect=block_on_detect, weight=weight)
         """
         Initializes the filter with a blocking or sanitizing behavior.
 
@@ -19,7 +24,6 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
             block_on_detect (bool): If True, any detected attempt results in 'block'. 
             If False, the input is marked for sanitization.
         """
-        self.block_on_detect = block_on_detect
         self.suspicious_phrases = [
             "disable firewall",
             "turn off firewall",

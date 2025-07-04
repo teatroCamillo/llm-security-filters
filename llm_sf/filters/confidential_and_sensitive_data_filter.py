@@ -14,7 +14,12 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
     sanitization by redacting the sensitive parts.
     """
 
-    def __init__(self, block_on_detect: bool = True):
+    def __init__(
+        self,
+        block_on_detect: bool = True, 
+        weight: float = 1.0
+    ):
+        super().__init__(block_on_detect=block_on_detect, weight=weight)
         """
         Initializes the filter with an optional blocking behavior.
 
@@ -22,7 +27,6 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
             block_on_detect (bool): If True, any detected sensitive data results in 'block'.
                                     If False, the filter returns 'sanitize' with redacted text.
         """
-        self.block_on_detect = block_on_detect
         self.labeler = DataLabeler(labeler_type='unstructured')
 
     def run_filter(self, context):

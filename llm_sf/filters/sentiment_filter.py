@@ -20,19 +20,23 @@ class SentimentFilter(BaseFilter):
     the text may be blocked or flagged for sanitization.
     """
 
-    def __init__(self, threshold=-0.7, block_on_negative=True):
+    def __init__(
+        self,
+        block_on_detect: bool = True, 
+        weight: float = 1.0, 
+        threshold=-0.7
+        ):
+        super().__init__(block_on_detect=block_on_detect, weight=weight)
         """
         Initializes the sentiment filter with configuration options.
 
         Args:
             threshold (float): Minimum acceptable compound sentiment score. Below this value, the text is flagged.
-            block_on_negative (bool): Determines whether to block or sanitize when sentiment is too negative.
+            block_on_detect (bool): Determines whether to block or sanitize when sentiment is too negative.
         """
         self.threshold = threshold
-        self.block_on_negative = block_on_negative
         self.analyzer = SentimentIntensityAnalyzer()
         self.profanites = self._load_profanities_from_csv()
-    
         
         for word in self.profanites:
             self._updadte_lexicon(word, -4.0)
@@ -42,7 +46,7 @@ class SentimentFilter(BaseFilter):
         Analyzes the sentiment of the input text and returns a filtering decision.
 
         If the compound sentiment score is below the configured threshold, the filter 
-        either blocks or sanitizes the text depending on the `block_on_negative` setting.
+        either blocks or sanitizes the text depending on the `block_on_detect` setting.
 
         Args:
             context: The Context object containing the text to analyze.
@@ -64,7 +68,7 @@ class SentimentFilter(BaseFilter):
         scores = self.analyzer.polarity_scores(text)
 
         if scores["compound"] < self.threshold:
-            verdict = "block" if self.block_on_negative else "sanitize"
+            verdict = "block" if self.block_on_detect else "sanitize"
             return FilterResult(
                 verdict=verdict,
                 reason=f"Negative sentiment {scores['compound']} below threshold {self.threshold}",
