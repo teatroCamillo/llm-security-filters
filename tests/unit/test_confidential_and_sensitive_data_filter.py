@@ -34,4 +34,4 @@ def test_allow(phrase):
     result = filter_obj.run_filter(context)
 
     assert isinstance(result, FilterResult)
-    assert result.verdict == "allow"
+    assert result.verdict == Constants.ALLOWED

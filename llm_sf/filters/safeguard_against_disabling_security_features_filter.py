@@ -2,6 +2,7 @@
 import re
 from collections import Counter
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.utils.constants import Constants
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """
@@ -61,7 +62,7 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         if found_suspicious or injection_reason:
             if self.block_on_detect:
                 return FilterResult(
-                    verdict="block",
+                    verdict=Constants.BLOCKED,
                     reason=injection_reason or "Detected attempt to disable security features."
                 )
             else:
@@ -70,13 +71,13 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
                     sanitized_text = re.sub(rf"\b{keyword}\b", "[SECURITY WARNING]", sanitized_text)
 
                 return FilterResult(
-                    verdict="sanitize",
+                    verdict=Constants.SANITIZED,
                     reason=injection_reason or "Suspicious content detected. Sanitize suggested.",
                     metadata={"sanitized_text": sanitized_text}
                 )
 
         return FilterResult(
-            verdict="allow",
+            verdict=Constants.ALLOWED,
             reason="No attempt to disable or bypass security features or prompt injection detected."
         )
 

@@ -23,7 +23,7 @@ def test_block(sentence, word):
     pf = ProfanityFilter()
     result = pf.run_filter(context)
 
-    assert result.verdict == "block"
+    assert result.verdict == Constants.BLOCKED
     assert "block_on_detect" in result.reason
 
 @pytest.mark.parametrize("sentence,word", load_profanity_sentences())
@@ -32,7 +32,7 @@ def test_sanitize(sentence, word):
     pf = ProfanityFilter(block_on_detect=False)
     result = pf.run_filter(context)
 
-    assert result.verdict == "sanitize"
+    assert result.verdict == Constants.SANITIZED
     assert result.reason == "Detected profanity. 'block_on_detect' is False -> sanitize suggested."
 
 @pytest.mark.parametrize("sentence", load_clean_sentences())
@@ -41,5 +41,5 @@ def test_allow(sentence):
     pf = ProfanityFilter()
     result = pf.run_filter(context)
 
-    assert result.verdict == "allow"
+    assert result.verdict == Constants.ALLOWED
     assert result.reason == "No profanity detected."

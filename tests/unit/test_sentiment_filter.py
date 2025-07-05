@@ -26,7 +26,7 @@ def test_block(sentence, word):
     pf = SentimentFilter()
     result = pf.run_filter(context)
     print('Result:', result)
-    assert result.verdict == "block"
+    assert result.verdict == Constants.BLOCKED
 
 # CONSIDER SANITIZATION approach
 # @pytest.mark.parametrize("sentence,word", load_profanity_sentences())
@@ -39,4 +39,4 @@ def test_allow(sentence):
     pf = SentimentFilter()
     result = pf.run_filter(context)
     print('Result:', result)
-    assert result.verdict == "allow"
+    assert result.verdict == Constants.ALLOWED

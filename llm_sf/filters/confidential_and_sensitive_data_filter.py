@@ -4,6 +4,7 @@ from dataprofiler import Profiler, ProfilerOptions
 from dataprofiler.labelers.data_labelers import DataLabeler
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.filters.context import Context
+from llm_sf.utils.constants import Constants
 
 class ConfidentialAndSensitiveDataFilter(BaseFilter):
     """
@@ -78,7 +79,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
             if entities:
                 if self.block_on_detect:
                     return FilterResult(
-                        verdict="block",
+                        verdict=Constants.BLOCKED,
                         reason=f"Detected sensitive data: {[e['label'] for e in entities]}. Blocked due to policy."
                     )
                 else:
@@ -98,12 +99,12 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
 
         except Exception as e:
             return FilterResult(
-                verdict="allow",
+                verdict=Constants.ALLOWED,
                 reason=f"DataProfiler labeler failed: {e}"
             )
 
         return FilterResult(
-            verdict="allow",
+            verdict=Constants.ALLOWED,
             reason="No sensitive data detected."
         )
 

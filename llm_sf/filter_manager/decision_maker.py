@@ -1,6 +1,7 @@
 # decision_maker.py
 from typing import List
 from llm_sf.filters.base_filter import FilterResult
+from llm_sf.utils.constants import Constants
 
 class DecisionMaker:
 
@@ -17,15 +18,15 @@ class DecisionMaker:
     def make_decision(self, results: List[FilterResult]) -> FilterResult:
         if self.mode == "allow-block":
             for r in results:
-                if r.verdict == "block":
+                if r.verdict == Constants.BLOCKED:
                     return FilterResult(
-                        verdict="block",
+                        verdict=Constants.BLOCKED,
                         reason=r.reason,
                         metadata=r.metadata
                     )
 
             return FilterResult(
-                verdict="allow",
+                verdict=Constants.ALLOWED,
                 reason="All filters allowed",
                 metadata={}
             )
@@ -44,13 +45,13 @@ class DecisionMaker:
 
             if aggregate_score >= self.threshold:
                 return FilterResult(
-                    verdict="block",
+                    verdict=Constants.BLOCKED,
                     reason=f"Threshold exceeded: {aggregate_score:.3f} >= {self.threshold}",
                     metadata={"aggregate_score": aggregate_score}
                 )
             else:
                 return FilterResult(
-                    verdict="allow",
+                    verdict=Constants.ALLOWED,
                     reason=f"Threshold not exceeded: {aggregate_score:.3f} < {self.threshold}",
                     metadata={"aggregate_score": aggregate_score}
                 )

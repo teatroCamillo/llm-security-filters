@@ -68,7 +68,7 @@ class SentimentFilter(BaseFilter):
         scores = self.analyzer.polarity_scores(text)
 
         if scores["compound"] < self.threshold:
-            verdict = "block" if self.block_on_detect else "sanitize"
+            verdict = Constants.BLOCKED if self.block_on_detect else Constants.SANITIZED
             return FilterResult(
                 verdict=verdict,
                 reason=f"Negative sentiment {scores['compound']} below threshold {self.threshold}",
@@ -76,7 +76,7 @@ class SentimentFilter(BaseFilter):
             )
         else:
             return FilterResult(
-                verdict="allow",
+                verdict=Constants.ALLOWED,
                 metadata={"sentiment_scores": scores}
             )
 
