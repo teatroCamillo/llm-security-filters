@@ -9,26 +9,17 @@ from llm_sf.filters.safeguard_against_disabling_security_features_filter import 
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.utils.constants import Constants
 
-
 class AlwaysBlockFilter(BaseFilter):
-    """A test filter that always returns a 'block' verdict."""
     def run_filter(self, context):
         return FilterResult(verdict=Constants.BLOCKED, reason="Test: always block")
 
 
 class AlwaysSanitizeFilter(BaseFilter):
-    """
-    A test filter that always returns 'sanitize', but does not include a sanitized version.
-
-    Used to simulate repeated sanitization cycles that never succeed.
-    """
     def run_filter(self, context):
         return FilterResult(verdict=Constants.SANITIZED, reason="Test: always sanitize")
 
 
 class AllowFilter(BaseFilter):
-    """A test filter that always returns 'allow' verdict unconditionally."""
-
     def __init__(self):
         super().__init__()
 
@@ -72,11 +63,6 @@ def test_profanity_block_immediate():
 
 
 def test_confidential_data_block_on_detect():
-    """
-    Verifies that sensitive data (e.g., phone number) is blocked if the filter is configured to block.
-
-    The ConfidentialAndSensitiveDataFilter should return 'block' on detection.
-    """
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator()
     orchestrator.add_filter(ConfidentialAndSensitiveDataFilter())
@@ -88,11 +74,6 @@ def test_confidential_data_block_on_detect():
 
 @pytest.mark.skip
 def test_confidential_data_sanitized():
-    """
-    Ensures that sensitive data is sanitized when blocking is disabled.
-
-    Final result should be 'allow' with redacted output.
-    """
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator()
     orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(block_on_detect=False))
@@ -104,11 +85,6 @@ def test_confidential_data_sanitized():
 
 
 def test_safeguard_block_security_disabling():
-    """
-    Validates that disabling security-related features leads to a block verdict.
-
-    This ensures the safeguard filter blocks phrases like 'disable firewall'.
-    """
     text = "I think you should disable firewall to solve the issue."
     orchestrator = FilterOrchestrator()
     orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(block_on_detect=True))
@@ -118,11 +94,6 @@ def test_safeguard_block_security_disabling():
     assert "disable security features" in (result.reason or "").lower(), result
 
 def test_no_block_allows():
-    """
-    Ensures that when no filter returns 'block' in parallel mode, the final verdict is 'allow'.
-
-    Filters are configured to allow or return low-impact results.
-    """
     text = "Just a friendly text, no issues."
     orchestrator = FilterOrchestrator()
     orchestrator.add_filter(AllowFilter())
@@ -133,11 +104,6 @@ def test_no_block_allows():
 
 @pytest.mark.skip
 def test_one_filter_blocks_other_allow():
-    """
-    Ensures that in parallel mode, even one blocking filter results in a final 'block' verdict.
-
-    Other filters may allow, but 'block' takes precedence.
-    """
     text = "No big deal, but let's add an always-block filter."
     orchestrator = FilterOrchestrator()
     orchestrator.add_filter(AllowFilter())
