@@ -16,3 +16,5 @@ class Constants:
     ALLOWED = "allowed"
     BLOCKED = "blocked"
     SANITIZED = "sanitized"
+
+    OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
