@@ -1,4 +1,5 @@
 from pathlib import Path
+import csv
 
 class Constants:
     
@@ -7,6 +8,7 @@ class Constants:
     RESOURCES_DIR = ROOT_DIR / "resources"
     PROFANITIES_CSV = RESOURCES_DIR / "profanities_en.csv"
     PROFANITY_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences.csv"
+    PROFANITY_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences_FULL.csv"
     CLEAN_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "clean_sentences.csv"
     MUTATED_WORDS_CSV = RESOURCES_DIR / "mutated_words.csv"
     CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "conf_and_sensitive_phrases.csv"
@@ -18,3 +20,10 @@ class Constants:
     SANITIZED = "sanitized"
 
     OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
+
+    @staticmethod
+    def load_profanity_sentences():
+        with open(Constants.PROFANITY_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
+            return [row[1] for row in reader if len(row) >= 1]
