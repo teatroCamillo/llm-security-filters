@@ -1,5 +1,6 @@
 # decision_maker.py
 from typing import List
+import math
 from llm_sf.filters.base_filter import FilterResult
 from llm_sf.utils.constants import Constants
 
@@ -32,27 +33,30 @@ class DecisionMaker:
             )
 
         elif self.mode == "threshold":
-            total_weight = 0.0
             weighted_sum = 0.0
 
             for r in results:
                 score = float(r.metadata.get("risk_score", 0.0))
                 weight = float(r.metadata.get("weight", 1.0))
                 weighted_sum += score * weight
-                total_weight += weight
 
-            aggregate_score = weighted_sum / total_weight if total_weight > 0 else 0.0
+            # Normalize using sigmoid to always stay in (0,1)
+            aggregate_score = 1 / (1 + math.exp(-weighted_sum))
+            aggregate_score = round(aggregate_score, 2)
+
+            print("weighted_sum:", weighted_sum)
+            print("aggregate_score:", aggregate_score)
 
             if aggregate_score >= self.threshold:
                 return FilterResult(
                     verdict=Constants.BLOCKED,
-                    reason=f"Threshold exceeded: {aggregate_score:.3f} >= {self.threshold}",
+                    reason=f"Threshold exceeded: {aggregate_score:.2f} >= {self.threshold}",
                     metadata={"aggregate_score": aggregate_score}
                 )
             else:
                 return FilterResult(
                     verdict=Constants.ALLOWED,
-                    reason=f"Threshold not exceeded: {aggregate_score:.3f} < {self.threshold}",
+                    reason=f"Threshold not exceeded: {aggregate_score:.2f} < {self.threshold}",
                     metadata={"aggregate_score": aggregate_score}
                 )
 

@@ -2,6 +2,7 @@
 import pytest
 
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
+from llm_sf.filter_manager.decision_maker import DecisionMaker
 from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filters.sentiment_filter import SentimentFilter
 from llm_sf.filters.confidential_and_sensitive_data_filter import ConfidentialAndSensitiveDataFilter
@@ -46,6 +47,23 @@ def test_profanity_block_immediate():
     assert result.verdict == Constants.BLOCKED
     #assert "Detected profanity" in (result.reason or ""), result
 
+def test_profanity_in_t_mode_blocked():
+    text = "This is a damn test."
+    dm = DecisionMaker("threshold", 0.6)
+    orchestrator = FilterOrchestrator(dm)
+    orchestrator.add_filter(ProfanityFilter(weight=3.0))
+
+    result = orchestrator.run(text)
+    assert result.verdict == Constants.BLOCKED
+
+def test_profanity_in_t_mode_allowed():
+    text = "This is a damn test."
+    dm = DecisionMaker("threshold", 0.6)
+    orchestrator = FilterOrchestrator(dm)
+    orchestrator.add_filter(ProfanityFilter(weight=0.005))
+
+    result = orchestrator.run(text)
+    assert result.verdict == Constants.ALLOWED
 
 # def test_profanity_sanitize_then_allow():
 #     """
@@ -92,6 +110,16 @@ def test_safeguard_block_security_disabling():
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
     assert "disable security features" in (result.reason or "").lower(), result
+
+# def test_safeguard_block_security_disabling_by_threshold():
+#     text = "I think you should disable firewall to solve the issue."
+#     dm = DecisionMaker("threshold")
+#     orchestrator = FilterOrchestrator(dm)
+#     orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(block_on_detect=True))
+
+#     result = orchestrator.run(text)
+#     assert result.verdict == Constants.BLOCKED
+#     assert "disable security features" in (result.reason or "").lower(), result
 
 def test_no_block_allows():
     text = "Just a friendly text, no issues."

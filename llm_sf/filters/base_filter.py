@@ -33,3 +33,13 @@ class BaseFilter(ABC):
         """
         raise NotImplementedError("Must implement run_filter() in subclass")
 
+    @abstractmethod
+    def compute_risk_score(self, context) -> float:
+        """
+        Compute a risk score based on the current context.
+        Should be implemented by each filter specifically.
+
+        Returns:
+            float: A normalized risk score between 0.0 and 1.0
+        """
+        return 0.0
