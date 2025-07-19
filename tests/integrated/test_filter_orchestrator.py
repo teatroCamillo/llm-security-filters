@@ -130,6 +130,23 @@ def test_no_block_allows():
     result = orchestrator.run(text)
     assert result.verdict == Constants.ALLOWED, result
 
+def test_sentiment_in_t_mode_allowed():
+    text = "Just a friendly text, no issues."
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold", 0.6))
+    orchestrator.add_filter(SentimentFilter(weight=1.0, threshold=0.3))
+
+    result = orchestrator.run(text)
+    assert result.verdict == Constants.ALLOWED
+
+def test_sentiment_in_t_mode_blocked():
+    text = "Just a friendly text, no issues."
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold", 0.6))
+    orchestrator.add_filter(SentimentFilter(weight=2.0, threshold=0.3))
+
+    result = orchestrator.run(text)
+    assert result.verdict == Constants.BLOCKED
+
+
 @pytest.mark.skip
 def test_one_filter_blocks_other_allow():
     text = "No big deal, but let's add an always-block filter."

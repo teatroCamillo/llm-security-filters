@@ -67,17 +67,29 @@ class SentimentFilter(BaseFilter):
         print(f"Analyzing sentiment for text: {text}")
         scores = self.analyzer.polarity_scores(text)
 
+        risk_score = self.compute_risk_score(scores["compound"])
+        print(f"scores[compound]: ", scores["compound"])
+        print(f"risk_score: {risk_score}")
+
         if scores["compound"] < self.threshold:
             verdict = Constants.BLOCKED if self.block_on_detect else Constants.SANITIZED
             return FilterResult(
                 verdict=verdict,
                 reason=f"Negative sentiment {scores['compound']} below threshold {self.threshold}",
-                metadata={"sentiment_scores": scores}
+                metadata = {
+                    "sentiment_scores": scores,
+                    "risk_score": risk_score,
+                    "weight": self.weight
+                }
             )
         else:
             return FilterResult(
                 verdict=Constants.ALLOWED,
-                metadata={"sentiment_scores": scores}
+                metadata = {
+                    "sentiment_scores": scores,
+                    "risk_score": risk_score,
+                    "weight": self.weight
+                }
             )
 
     def _updadte_lexicon(self, word, score):
@@ -96,6 +108,14 @@ class SentimentFilter(BaseFilter):
         pattern = f'([{re.escape("!?,.:;")}])'
         return re.sub(pattern, r' \1 ', text)
     
+    def compute_risk_score(self, score_compound) -> float:
+        # Normalize: map [-1.0, 0) → [1.0, 0.0]
+        risk_score = round((1 - score_compound) / 2, 2)
+
+        print("compound:", score_compound)
+        print("risk_score:", risk_score)
+        return risk_score
+
     def _load_profanities_from_csv(self):
         """
         Loads the first column of profanity words from the configured CSV file and adds them
