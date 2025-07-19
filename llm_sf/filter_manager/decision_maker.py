@@ -6,7 +6,7 @@ from llm_sf.utils.constants import Constants
 
 class DecisionMaker:
 
-    def __init__(self, mode: str = "allow-block", threshold: float = 0.5):
+    def __init__(self, mode: str = "allow-block", threshold: float = 0.6):
         """
         modes:
         - threshold - range 0-1, as higher then worese

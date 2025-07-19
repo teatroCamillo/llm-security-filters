@@ -90,6 +90,24 @@ def test_confidential_data_block_on_detect():
     assert result.verdict == Constants.BLOCKED
     assert "Detected sensitive data: ['PHONE_NUMBER']. Blocked due to policy." in result.reason
 
+def test_confidential_data_in_t_mode_blocked():
+    text = "Call me at 123-456-7890!"
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(weight=3.0))
+
+    result = orchestrator.run(text)
+    print("Result: ", result)
+    assert result.verdict == Constants.BLOCKED
+
+def test_confidential_data_in_t_mode_allowed():
+    text = "Call me at 123-456-7890!"
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(weight=1.0))
+
+    result = orchestrator.run(text)
+    print("Result: ", result)
+    assert result.verdict == Constants.ALLOWED
+
 @pytest.mark.skip
 def test_confidential_data_sanitized():
     text = "Call me at 123-456-7890!"
