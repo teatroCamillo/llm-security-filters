@@ -1,40 +1,82 @@
 # safeguard_against_disabling_security_features_filter.py
 import re
+import math
 from collections import Counter
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.utils.constants import Constants
 
+"""
+What to do?
+1. expand suspe.phrases and jail patterns
+2. each technic should be represented by method, so extract suspicious_phrases to method
+3. improve _detect method that should go through all methods not only by one and return result. Should go by all and each method should
+return partial to calculate risk_score.
+4. Do not touch sanitization now. This element will be improved later!
+5. Provide compute_risk_score as it is in confidential_and_sensitive_data_filter.py. Provide correct method.
+6. provide _has_high_entropy()
+"""
+
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """
-    A filter that detects attempts to disable security-related features and known prompt injection techniques.
-
-    Monitors input text for suspicious phrases such as attempts to turn off firewalls,
-    antivirus software, repeated tokens, excessive Q&A pairs, and known jailbreak patterns.
+    Detects attempts to disable security features or inject malicious instructions.
     """
 
-    def __init__(        
-        self,
-        block_on_detect: bool = True, 
-        weight: float = 1.0
-        ):
+    def __init__(self, block_on_detect: bool = True, weight: float = 1.0):
         super().__init__(block_on_detect=block_on_detect, weight=weight)
-        """
-        Initializes the filter with a blocking or sanitizing behavior.
 
-        Args:
-            block_on_detect (bool): If True, any detected attempt results in 'block'. 
-            If False, the input is marked for sanitization.
-        """
-        self.suspicious_phrases = [
-            "disable firewall",
-            "turn off firewall",
-            "disable antivirus",
-            "turn off antivirus",
-            "bypass security",
-            "disable security features",
-            "disabling security"
+    def run_filter(self, context):
+        text = context.current_text.lower()
+        results = []
+
+        results.append(self._detect_suspicious_phrases(text))
+        results.append(self._detect_jailbreak_phrases(text))
+        results.append(self._detect_repeated_tokens(text))
+        results.append(self._detect_high_entropy(text))
+
+        findings = [r for r in results if r['matched']]
+        risk_score = self.compute_risk_score(findings)
+
+        if findings:
+            reasons = ", ".join([r['reason'] for r in findings])
+            metadata = {
+                "risk_score": risk_score,
+                "weight": self.weight,
+                "triggers": [r['reason'] for r in findings],
+            }
+
+            if self.block_on_detect:
+                return FilterResult(
+                    verdict=Constants.BLOCKED,
+                    reason=f"Security threat detected: {reasons}",
+                    metadata=metadata
+                )
+            else:
+                return FilterResult(
+                    verdict=Constants.SANITIZED,
+                    reason=f"Sanitization required: {reasons}",
+                    metadata=metadata
+                )
+
+        return FilterResult(
+            verdict=Constants.ALLOWED,
+            reason="No disabling or injection attempt detected."
+        )
+
+    def _detect_suspicious_phrases(self, text):
+        phrases = [
+            "disable firewall", "turn off firewall", "deactivate firewall",
+            "disable antivirus", "turn off antivirus", "uninstall antivirus", "deactivate antivirus",
+            "bypass security", "disable security features", "disabling security",
+            "remove endpoint protection", "kill security process", "terminate defender",
+            "disable defender", "stop antivirus service"
         ]
-        self.jailbreak_patterns = [
+        for phrase in phrases:
+            if phrase in text:
+                return {"matched": True, "reason": f"Suspicious phrase: '{phrase}'", "weight": 0.6}
+        return {"matched": False}
+
+    def _detect_jailbreak_phrases(self, text):
+        patterns = [
             r"ignore all previous instructions",
             r"disregard (all )?prior instructions",
             r"please ignore your (previous|prior) directives",
@@ -42,57 +84,41 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
             r"say ['\"]i am hacked['\"]",
             r"print ['\"]i hate human['\"]",
             r"ignore (this|that) and do as i say",
+            r"forget previous rules",
+            r"override safety",
+            r"you are not bound by",
         ]
+        for pattern in patterns:
+            if re.search(pattern, text):
+                return {"matched": True, "reason": f"Jailbreak pattern: '{pattern}'", "weight": 0.7}
+        return {"matched": False}
 
-    def run_filter(self, context):
-        """
-        Evaluates the text for attempts to disable security features or signs of prompt injection.
-
-        Returns:
-            FilterResult: Outcome of the filtering process (allow, block, sanitize).
-        """
-        text = context.current_text
-        text_lower = text.lower()
-
-        # 1. Check for suspicious phrases
-        found_suspicious = any(phrase in text_lower for phrase in self.suspicious_phrases)
-
-        # 2. Heuristic injection checks
-        injection_reason = self._detect_prompt_injection(text_lower)
-        if found_suspicious or injection_reason:
-            if self.block_on_detect:
-                return FilterResult(
-                    verdict=Constants.BLOCKED,
-                    reason=injection_reason or "Detected attempt to disable security features."
-                )
-            else:
-                sanitized_text = text_lower
-                for keyword in ["disable", "turn off", "bypass", "ignore", "disregard", "print", "say"]:
-                    sanitized_text = re.sub(rf"\b{keyword}\b", "[SECURITY WARNING]", sanitized_text)
-
-                return FilterResult(
-                    verdict=Constants.SANITIZED,
-                    reason=injection_reason or "Suspicious content detected. Sanitize suggested.",
-                    metadata={"sanitized_text": sanitized_text}
-                )
-
-        return FilterResult(
-            verdict=Constants.ALLOWED,
-            reason="No attempt to disable or bypass security features or prompt injection detected."
-        )
-
-    def _detect_prompt_injection(self, text):
-        """Applies heuristic checks to detect prompt injection."""
-        if self._is_repeated_token(text):
-            return "Repeated token attack detected"
-        if self._contains_jailbreak_phrases(text):
-            return "Known jailbreak phrase detected"
-        return None
-
-    def _is_repeated_token(self, text, threshold=3):
+    def _detect_repeated_tokens(self, text, threshold=3):
         tokens = re.findall(r'\b\w+\b', text)
         counts = Counter(tokens)
-        return any(count > threshold for count in counts.values())
+        if any(count > threshold for count in counts.values()):
+            return {"matched": True, "reason": "Repeated token attack", "weight": 0.4}
+        return {"matched": False}
 
-    def _contains_jailbreak_phrases(self, text):
-        return any(re.search(pattern, text) for pattern in self.jailbreak_patterns)
+    def _detect_high_entropy(self, text, threshold=4.0):
+        if not text or len(text) < 20:
+            return {"matched": False}
+        probs = [float(text.count(c)) / len(text) for c in set(text)]
+        entropy = -sum(p * math.log2(p) for p in probs)
+        if entropy > threshold:
+            return {"matched": True, "reason": f"High entropy content (entropy={entropy:.2f})", "weight": 0.5}
+        return {"matched": False}
+
+    def compute_risk_score(self, findings: list) -> float:
+        """
+        Computes normalized risk score based on detected issues.
+
+        Args:
+            findings (list): List of dicts from _detect_* methods.
+
+        Returns:
+            float: Risk score [0.0, 1.0]
+        """
+        total_weight = sum(f.get("weight", 0.1) for f in findings)
+        MAX_SEVERITY = 3.0
+        return round(min(total_weight / MAX_SEVERITY, 1.0), 2)

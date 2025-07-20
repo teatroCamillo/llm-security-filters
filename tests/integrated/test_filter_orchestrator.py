@@ -129,15 +129,23 @@ def test_safeguard_block_security_disabling():
     assert result.verdict == Constants.BLOCKED
     assert "disable security features" in (result.reason or "").lower(), result
 
-# def test_safeguard_block_security_disabling_by_threshold():
-#     text = "I think you should disable firewall to solve the issue."
-#     dm = DecisionMaker("threshold")
-#     orchestrator = FilterOrchestrator(dm)
-#     orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(block_on_detect=True))
+def test_safeguard_security_disabling_in_t_mode_blocked():
+    text = "I think you should disable firewall to solve the issue."
+    dm = DecisionMaker("threshold")
+    orchestrator = FilterOrchestrator(dm)
+    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(weight=3.0))
 
-#     result = orchestrator.run(text)
-#     assert result.verdict == Constants.BLOCKED
-#     assert "disable security features" in (result.reason or "").lower(), result
+    result = orchestrator.run(text)
+    assert result.verdict == Constants.BLOCKED
+
+def test_safeguard_security_disabling_in_t_mode_allowed():
+    text = "I think you should disable firewall to solve the issue."
+    dm = DecisionMaker("threshold")
+    orchestrator = FilterOrchestrator(dm)
+    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
+
+    result = orchestrator.run(text)
+    assert result.verdict == Constants.ALLOWED
 
 def test_no_block_allows():
     text = "Just a friendly text, no issues."
