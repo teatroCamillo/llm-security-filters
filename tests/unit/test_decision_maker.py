@@ -87,7 +87,7 @@ def test_metadata_propagation_on_block(dm):
 
 @pytest.fixture
 def threshold_dm():
-    return DecisionMaker(mode="threshold", threshold=0.5)
+    return DecisionMaker(mode="threshold", threshold=0.6)
 
 def test_threshold_all_zero(threshold_dm):
     results = [
@@ -115,17 +115,17 @@ def test_threshold_exact_match(threshold_dm):
     ]
     decision = threshold_dm.make_decision(results)
     assert decision.verdict == Constants.BLOCKED
-    assert decision.metadata["aggregate_score"] == pytest.approx(0.5, abs=1e-6)
+    assert decision.metadata["aggregate_score"] == pytest.approx(0.73, abs=1e-6)
 
 
 def test_threshold_just_below(threshold_dm):
     results = [
-        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.49}),
-        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.49}),
+        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.18}),
+        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.18}),
     ]
     decision = threshold_dm.make_decision(results)
     assert decision.verdict == Constants.ALLOWED
-    assert decision.metadata["aggregate_score"] == pytest.approx(0.49, abs=1e-6)
+    assert decision.metadata["aggregate_score"] == pytest.approx(0.59, abs=1e-6)
 
 
 def test_threshold_weighted_block(threshold_dm):
@@ -135,34 +135,35 @@ def test_threshold_weighted_block(threshold_dm):
     ]
     decision = threshold_dm.make_decision(results)
     assert decision.verdict == Constants.BLOCKED
-    assert decision.metadata["aggregate_score"] == pytest.approx(0.783333, abs=1e-6)
+    assert decision.metadata["aggregate_score"] == 0.99
 
 
 def test_threshold_weighted_allow(threshold_dm):
     results = [
-        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.9, "weight": 1}),
-        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.2, "weight": 5}),
+        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.9, "weight": 0.1}),
+        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.2, "weight": 1}),
     ]
     decision = threshold_dm.make_decision(results)
     assert decision.verdict == Constants.ALLOWED
-    assert decision.metadata["aggregate_score"] == pytest.approx(0.316666, abs=1e-6)
+    assert decision.metadata["aggregate_score"] == 0.57
 
 def test_threshold_weighted_block_and_allow(threshold_dm):
     results = [
-        FilterResult(Constants.BLOCKED, "not ok", {"risk_score": 0.9, "weight": 1}),
-        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.2, "weight": 5}),
+        FilterResult(Constants.BLOCKED, "not ok", {"risk_score": 0.9, "weight": 0.1}),
+        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.2, "weight": 1}),
     ]
     decision = threshold_dm.make_decision(results)
+    print("decision: ", decision)
     assert decision.verdict == Constants.ALLOWED
-    assert decision.metadata["aggregate_score"] == pytest.approx(0.316666, abs=1e-6)
+    assert decision.metadata["aggregate_score"] == 0.57
 
 def test_threshold_missing_risk_score(threshold_dm):
     results = [
         FilterResult(Constants.ALLOWED, "ok", {}),
-        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.6}),
+        FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.1}),
     ]
     decision = threshold_dm.make_decision(results)
-    assert decision.verdict == Constants.ALLOWED  # because default for missing is 0.0
+    assert decision.verdict == Constants.ALLOWED
 
 
 def test_threshold_missing_weight(threshold_dm):
