@@ -1,17 +1,14 @@
-# test_sentiment_filter.py
+# test_profanity_filter.py
 import pytest
 import csv
-from llm_sf.filters.sentiment_filter import SentimentFilter
+from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filters.context import Context
 from llm_sf.utils.constants import Constants
-
-import tensorflow as tf
-print(tf.__version__)
 
 def load_profanity_sentences():
     with open(Constants.PROFANITY_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
-        next(reader, None)
+        next(reader, None)  # skip header if exists
         return [(row[1], row[0]) for row in reader if len(row) == 2]
 
 def load_clean_sentences():
@@ -23,20 +20,26 @@ def load_clean_sentences():
 @pytest.mark.parametrize("sentence,word", load_profanity_sentences())
 def test_block(sentence, word):
     context = Context(sentence)
-    pf = SentimentFilter()
+    pf = ProfanityFilter()
     result = pf.run_filter(context)
-    print('Result:', result)
-    assert result.verdict == "block"
 
-# CONSIDER SANITIZATION approach
-# @pytest.mark.parametrize("sentence,word", load_profanity_sentences())
-# def test_sanitize(sentence, word):
-#     pass
+    assert result.verdict == Constants.BLOCKED
+    assert "block_on_detect" in result.reason
+
+@pytest.mark.parametrize("sentence,word", load_profanity_sentences())
+def test_sanitize(sentence, word):
+    context = Context(sentence)
+    pf = ProfanityFilter(block_on_detect=False)
+    result = pf.run_filter(context)
+
+    assert result.verdict == Constants.SANITIZED
+    assert result.reason == "Detected profanity. 'block_on_detect' is False -> sanitize suggested."
 
 @pytest.mark.parametrize("sentence", load_clean_sentences())
 def test_allow(sentence):
     context = Context(sentence)
-    pf = SentimentFilter()
+    pf = ProfanityFilter()
     result = pf.run_filter(context)
-    print('Result:', result)
-    assert result.verdict == "allow"
+
+    assert result.verdict == Constants.ALLOWED
+    assert result.reason == "No profanity detected."

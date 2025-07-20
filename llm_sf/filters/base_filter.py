@@ -10,6 +10,11 @@ class BaseFilter(ABC):
     Each subclass must implement the `run_filter()` method to apply its specific logic.
     """
     @abstractmethod
+    def __init__(self, block_on_detect: bool = True, weight: float = 1.0):
+        self.block_on_detect = block_on_detect
+        self.weight = weight
+
+    @abstractmethod
     def run_filter(self, context) -> FilterResult:
         """
         Analyzes content using filter-specific logic and returns a result.
@@ -28,3 +33,13 @@ class BaseFilter(ABC):
         """
         raise NotImplementedError("Must implement run_filter() in subclass")
 
+    @abstractmethod
+    def compute_risk_score(self, context) -> float:
+        """
+        Compute a risk score based on the current context.
+        Should be implemented by each filter specifically.
+
+        Returns:
+            float: A normalized risk score between 0.0 and 1.0
+        """
+        return 0.0

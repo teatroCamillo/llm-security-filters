@@ -1,49 +1,63 @@
 # decision_maker.py
 from typing import List
+import math
 from llm_sf.filters.base_filter import FilterResult
+from llm_sf.utils.constants import Constants
 
 class DecisionMaker:
-    """
-    Utility class for aggregating results from multiple content filters.
 
-    This class provides logic to evaluate a collection of `FilterResult` objects,
-    representing the outcomes of parallel filters, and derives a unified decision
-    with a clear priority order: 'block' > 'sanitize' > 'allow'.
-    """
-
-    def combine_parallel_results(self, results: List[FilterResult]) -> FilterResult:
+    def __init__(self, mode: str = "allow-block", threshold: float = 0.6):
         """
-        Aggregates filter results into a single decision based on priority rules.
-
-        The logic follows a fixed priority:
-            1. If any result has verdict "block", the overall result is "block".
-            2. If no blocks are found but at least one "sanitize" appears, the result is "sanitize".
-            3. If all results are "allow", the result is "allow".
-
-        This method enables centralized decision-making when filters operate in parallel.
-
-        Args:
-            results (List[FilterResult]): A list of results returned from individual filters.
-
-        Returns:
-            FilterResult: A single `FilterResult` representing the aggregated decision.
+        modes:
+        - threshold - range 0-1, as higher then worese
+        - allow-block
         """
-        for r in results:
-            if r.verdict == "block":
-                return FilterResult(
-                    verdict="block",
-                    reason=r.reason,
-                    metadata=r.metadata
-                )
 
-        sanitize_reasons = [
-            r.reason or "sanitize requested" for r in results if r.verdict == "sanitize"
-        ]
+        self.mode = mode
+        self.threshold = threshold
 
-        if sanitize_reasons:
+    def make_decision(self, results: List[FilterResult]) -> FilterResult:
+        if self.mode == "allow-block":
+            for r in results:
+                if r.verdict == Constants.BLOCKED:
+                    return FilterResult(
+                        verdict=Constants.BLOCKED,
+                        reason=r.reason,
+                        metadata=r.metadata
+                    )
+
             return FilterResult(
-                verdict="sanitize",
-                reason="; ".join(sanitize_reasons)
+                verdict=Constants.ALLOWED,
+                reason="All filters allowed",
+                metadata={}
             )
 
-        return FilterResult(verdict="allow")
+        elif self.mode == "threshold":
+            weighted_sum = 0.0
+
+            for r in results:
+                score = float(r.metadata.get("risk_score", 0.0))
+                weight = float(r.metadata.get("weight", 1.0))
+                weighted_sum += score * weight
+
+            # Normalize using sigmoid to always stay in (0,1)
+            aggregate_score = 1 / (1 + math.exp(-weighted_sum))
+            aggregate_score = round(aggregate_score, 2)
+
+            print("weighted_sum:", weighted_sum)
+            print("aggregate_score:", aggregate_score)
+
+            if aggregate_score >= self.threshold:
+                return FilterResult(
+                    verdict=Constants.BLOCKED,
+                    reason=f"Threshold exceeded: {aggregate_score:.2f} >= {self.threshold}",
+                    metadata={"aggregate_score": aggregate_score}
+                )
+            else:
+                return FilterResult(
+                    verdict=Constants.ALLOWED,
+                    reason=f"Threshold not exceeded: {aggregate_score:.2f} < {self.threshold}",
+                    metadata={"aggregate_score": aggregate_score}
+                )
+
+        raise ValueError(f"Unknown decision mode: {self.mode}")

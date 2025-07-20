@@ -20,19 +20,23 @@ class SentimentFilter(BaseFilter):
     the text may be blocked or flagged for sanitization.
     """
 
-    def __init__(self, threshold=-0.7, block_on_negative=True):
+    def __init__(
+        self,
+        block_on_detect: bool = True, 
+        weight: float = 1.0, 
+        threshold=-0.7
+        ):
+        super().__init__(block_on_detect=block_on_detect, weight=weight)
         """
         Initializes the sentiment filter with configuration options.
 
         Args:
             threshold (float): Minimum acceptable compound sentiment score. Below this value, the text is flagged.
-            block_on_negative (bool): Determines whether to block or sanitize when sentiment is too negative.
+            block_on_detect (bool): Determines whether to block or sanitize when sentiment is too negative.
         """
         self.threshold = threshold
-        self.block_on_negative = block_on_negative
         self.analyzer = SentimentIntensityAnalyzer()
         self.profanites = self._load_profanities_from_csv()
-    
         
         for word in self.profanites:
             self._updadte_lexicon(word, -4.0)
@@ -42,7 +46,7 @@ class SentimentFilter(BaseFilter):
         Analyzes the sentiment of the input text and returns a filtering decision.
 
         If the compound sentiment score is below the configured threshold, the filter 
-        either blocks or sanitizes the text depending on the `block_on_negative` setting.
+        either blocks or sanitizes the text depending on the `block_on_detect` setting.
 
         Args:
             context: The Context object containing the text to analyze.
@@ -63,17 +67,29 @@ class SentimentFilter(BaseFilter):
         print(f"Analyzing sentiment for text: {text}")
         scores = self.analyzer.polarity_scores(text)
 
+        risk_score = self.compute_risk_score(scores["compound"])
+        print(f"scores[compound]: ", scores["compound"])
+        print(f"risk_score: {risk_score}")
+
         if scores["compound"] < self.threshold:
-            verdict = "block" if self.block_on_negative else "sanitize"
+            verdict = Constants.BLOCKED if self.block_on_detect else Constants.SANITIZED
             return FilterResult(
                 verdict=verdict,
                 reason=f"Negative sentiment {scores['compound']} below threshold {self.threshold}",
-                metadata={"sentiment_scores": scores}
+                metadata = {
+                    "sentiment_scores": scores,
+                    "risk_score": risk_score,
+                    "weight": self.weight
+                }
             )
         else:
             return FilterResult(
-                verdict="allow",
-                metadata={"sentiment_scores": scores}
+                verdict=Constants.ALLOWED,
+                metadata = {
+                    "sentiment_scores": scores,
+                    "risk_score": risk_score,
+                    "weight": self.weight
+                }
             )
 
     def _updadte_lexicon(self, word, score):
@@ -92,6 +108,14 @@ class SentimentFilter(BaseFilter):
         pattern = f'([{re.escape("!?,.:;")}])'
         return re.sub(pattern, r' \1 ', text)
     
+    def compute_risk_score(self, score_compound) -> float:
+        # Normalize: map [-1.0, 0) → [1.0, 0.0]
+        risk_score = round((1 - score_compound) / 2, 2)
+
+        print("compound:", score_compound)
+        print("risk_score:", risk_score)
+        return risk_score
+
     def _load_profanities_from_csv(self):
         """
         Loads the first column of profanity words from the configured CSV file and adds them

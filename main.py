@@ -3,9 +3,10 @@ import requests
 
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filters.profanity_filter import ProfanityFilter
+from llm_sf.utils.constants import Constants
 
 def main():
-    BASE_URL = "http://localhost:11434/api/chat"
+    BASE_URL = Constants.OLLAMA_CHAT_URL
     conversation_history = []
 
     # Create a single Orchestrator instance.
