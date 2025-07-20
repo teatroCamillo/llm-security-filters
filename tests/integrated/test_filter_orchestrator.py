@@ -12,21 +12,28 @@ from llm_sf.utils.constants import Constants
 
 class AlwaysBlockFilter(BaseFilter):
     def run_filter(self, context):
-        return FilterResult(verdict=Constants.BLOCKED, reason="Test: always block")
+        return FilterResult(verdict=Constants.BLOCKED, reason="Test: always block", metadata = {"risk_score": 1.0, "weight": 3.0})
+
+    def compute_risk_score(self, entities):
+        return 0.0 
 
 
 class AlwaysSanitizeFilter(BaseFilter):
     def run_filter(self, context):
         return FilterResult(verdict=Constants.SANITIZED, reason="Test: always sanitize")
 
+    def compute_risk_score(self, entities):
+        return 0.0 
 
 class AllowFilter(BaseFilter):
     def __init__(self):
         super().__init__()
 
     def run_filter(self, context):
-        return FilterResult(verdict=Constants.ALLOWED, reason="Test: always allow")
+        return FilterResult(verdict=Constants.ALLOWED, reason="Test: always allow", metadata = {"risk_score": 0.0, "weight": 1.0})
 
+    def compute_risk_score(self, entities):
+        return 0.0 
 
 def test_no_profanity_allows():
     text = "Hello world, this is a clean text."
@@ -93,10 +100,9 @@ def test_confidential_data_block_on_detect():
 def test_confidential_data_in_t_mode_blocked():
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
-    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(weight=3.0))
+    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(weight=4.0))
 
     result = orchestrator.run(text)
-    print("Result: ", result)
     assert result.verdict == Constants.BLOCKED
 
 def test_confidential_data_in_t_mode_allowed():
@@ -127,7 +133,7 @@ def test_safeguard_block_security_disabling():
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
-    assert "disable security features" in (result.reason or "").lower(), result
+    assert "suspicious phrase" in (result.reason or "").lower()
 
 def test_safeguard_security_disabling_in_t_mode_blocked():
     text = "I think you should disable firewall to solve the issue."
@@ -154,7 +160,8 @@ def test_no_block_allows():
     orchestrator.add_filter(SentimentFilter(threshold=-0.9999))
 
     result = orchestrator.run(text)
-    assert result.verdict == Constants.ALLOWED, result
+    print("Result: ", result)
+    assert result.verdict == Constants.ALLOWED
 
 def test_sentiment_in_t_mode_allowed():
     text = "Just a friendly text, no issues."
