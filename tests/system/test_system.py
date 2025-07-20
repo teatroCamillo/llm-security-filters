@@ -10,6 +10,7 @@ class TestSystem:
 
     def call_llm(self, conversation):
         try:
+            # This ensures that each forwarded message uses a new session. No previous context is used.
             payload = {
                 "model": "llama3.2",
                 "messages": conversation,

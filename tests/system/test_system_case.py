@@ -21,7 +21,7 @@ class SystemTestCase:
 
             if inbound_result.verdict == Constants.BLOCKED:
                 self.llm_outputs.append(None)
-                self.outbound_filter_outputs.append(None)  # ✅ Append placeholder to keep list aligned
+                self.outbound_filter_outputs.append(None)
                 self.actual_behaviors.append(Constants.BLOCKED)
                 self.results.append(Constants.BLOCKED == self.expected)
                 continue

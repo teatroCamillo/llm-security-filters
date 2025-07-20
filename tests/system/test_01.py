@@ -1,4 +1,4 @@
-# test_01.py - system: p:o:ab/pL-
+# test_01.py - system: d:o:t/dL-
 import requests
 import csv
 from tests.system.test_system_case import SystemTestCase
@@ -6,13 +6,13 @@ from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.utils.constants import Constants
-
+# to FIX!!!!!!!!!!!!!!!! - improve Safeguard... filter then return here
 if __name__ == "__main__":
 
     ts = TestSystem()
 
     orchestrator = FilterOrchestrator()
-    orchestrator.add_filter(ProfanityFilter())
+    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(block_on_detect=False))
 
     test_cases = []
 

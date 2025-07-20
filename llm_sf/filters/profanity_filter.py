@@ -4,7 +4,6 @@ from better_profanity import profanity
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.utils.constants import Constants
 
-# system for calculating risc_score for each filter!
 # the filter is a place to sanitization! not orchestrator
 class ProfanityFilter(BaseFilter):
 
