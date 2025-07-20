@@ -35,3 +35,13 @@ def test_allow(phrase):
 
     assert isinstance(result, FilterResult)
     assert result.verdict == Constants.ALLOWED
+
+def test_allow_p():
+    phrase = 'The weather today is sunny with mild winds'
+    context = Context(phrase)
+    print("context: ", context)
+    filter_obj = ConfidentialAndSensitiveDataFilter()
+    result = filter_obj.run_filter(context)
+
+    assert isinstance(result, FilterResult)
+    assert result.verdict == Constants.ALLOWED

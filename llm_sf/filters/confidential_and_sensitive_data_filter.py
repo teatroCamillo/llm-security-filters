@@ -47,7 +47,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
         # Labels we consider sensitive
         sensitive_labels = {
             'PAD',
-            'UNKNOWN',
+            #'UNKNOWN',
             'ADDRESS',
             'BAN',
             'CREDIT_CARD',
@@ -61,21 +61,22 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
             'IPV4',
             'IPV6',
             'MAC_ADDRESS',
-            'PERSON',
+            #'PERSON',
             'PHONE_NUMBER',
             'SSN',
             'URL',
             'US_STATE',
-            'INTEGER',
+            #'INTEGER',
             'FLOAT',
             'QUANTITY',
             'ORDINAL'
         }
 
         try:
+            metadata = {"risk_score": 0.0, "weight": self.weight} 
             prediction = self.labeler.predict([text], predict_options={"show_confidences": True})
             label_indices = prediction['pred'][0]
-
+            
             # Manually map label indices to names
             label_map_reverse = {v: k for k, v in self.labeler.label_mapping.items()}
             label_names_seq = [label_map_reverse[int(idx)] for idx in label_indices]
@@ -98,8 +99,9 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
                         current = None
             if current:
                 entities.append(current)
-
-            print("before entities")
+                
+            print("entities: ", entities)
+            print("IF before entities")
             if entities:
                 risk_score = self.compute_risk_score(entities)
                 metadata = {"risk_score": risk_score, "weight": self.weight}
@@ -126,6 +128,12 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
                         reason="Sensitive data detected and redacted.",
                         metadata={"sanitized_text": redacted_text, "risk_score": risk_score, "weight": self.weight}
                     )
+                
+            return FilterResult(
+                    verdict=Constants.ALLOWED,
+                    reason=f"No threat detected.",
+                    metadata=metadata
+                )
 
         except Exception as e:
             return FilterResult(
@@ -146,7 +154,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
         """
         SENSITIVITY_WEIGHTS = {
             'PAD': 0.0, # Padding Token
-            'UNKNOWN': 0.1,
+            #'UNKNOWN': 0.1,
             'ADDRESS': 0.4,
             'BAN': 0.5,  # Bank Account Number
             'CREDIT_CARD': 0.9,
@@ -160,12 +168,12 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
             'IPV4': 0.4,
             'IPV6': 0.4,
             'MAC_ADDRESS': 0.3,
-            'PERSON': 0.5,
+            #'PERSON': 0.5,
             'PHONE_NUMBER': 0.3,
             'SSN': 1.0, # Social Security Number
             'URL': 0.2,
             'US_STATE': 0.1,
-            'INTEGER': 0.1,
+            #'INTEGER': 0.1,
             'FLOAT': 0.1,
             'QUANTITY': 0.1,
             'ORDINAL': 0.0
