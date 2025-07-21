@@ -8,7 +8,50 @@ from llm_sf.utils.constants import Constants
 
 class TestSystem:
 
-    def call_llm(self, conversation):
+        # why run is in the object that carries informations?
+    def run(self, test_case: SystemTestCase, inbound_orchestrator=None, outbound_orchestrator=None):
+        for prompt in test_case.prompts:
+            if inbound_orchestrator:
+                inbound_result = inbound_orchestrator.run(prompt)
+                test_case.inbound_filter_outputs.append(inbound_result)
+
+                if inbound_result.verdict == Constants.BLOCKED:
+                    test_case.llm_outputs.append(None)
+                    test_case.outbound_filter_outputs.append(None)
+                    test_case.actual_behaviors.append(Constants.BLOCKED)
+                    test_case.results.append(Constants.BLOCKED == test_case.expected)
+                    continue
+
+                if inbound_result.verdict == Constants.SANITIZED:
+                    user_input_filtered = inbound_result.metadata.get("sanitized_text", "")
+                else:
+                    user_input_filtered = inbound_result.metadata.get("final_text", "")
+            else:
+                # No inbound filtering, use original prompt
+                test_case.inbound_filter_outputs.append(None)
+                user_input_filtered = prompt
+
+            conversation = [{"role": "user", "content": user_input_filtered}]
+            llm_output = _call_llm(conversation)
+            test_case.llm_outputs.append(llm_output)
+
+            if outbound_orchestrator:
+                outbound_result = outbound_orchestrator.run(llm_output)
+                test_case.outbound_filter_outputs.append(outbound_result)
+
+                if outbound_result.verdict == Constants.BLOCKED:
+                    test_case.actual_behaviors.append(Constants.BLOCKED)
+                elif outbound_result.verdict == Constants.SANITIZED:
+                    test_case.actual_behaviors.append(Constants.SANITIZED)
+                else:
+                    test_case.actual_behaviors.append(Constants.ALLOWED)
+            else:
+                test_case.outbound_filter_outputs.append(None)
+                test_case.actual_behaviors.append(Constants.ALLOWED)
+
+            test_case.results.append(test_case.actual_behaviors[-1] == test_case.expected)
+
+    def _call_llm(self, conversation):
         try:
             # This ensures that each forwarded message uses a new session. No previous context is used.
             payload = {

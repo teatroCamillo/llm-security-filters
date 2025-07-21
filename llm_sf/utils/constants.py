@@ -41,3 +41,10 @@ class Constants:
             reader = csv.reader(csvfile)
             next(reader, None)
             return [row[0] for row in reader if len(row) >= 1]
+
+    @staticmethod
+    def load_conf_and_sensitive_data():
+        with open(Constants.CONFIDENTIAL_AND_SENSITIVE_CSV, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
+            return [row[0] for row in reader]
