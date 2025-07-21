@@ -1,14 +1,16 @@
 from llm_sf.utils.constants import Constants
 
 class SystemTestCase:
-    def __init__(self, prompts, expected_behavior, name=None):
+    def __init__(self, prompts, expected_in=None, expected_out=None, name=None):
         self.name = name or "UnnamedTest"
         self.prompts = prompts
-        self.expected = expected_behavior
+        self.expected_in = expected_in
+        self.expected_out = expected_out
 
         # Results tracking
-        self.inbound_filter_outputs = []    # List[FilterResult]
-        self.outbound_filter_outputs = []   # List[FilterResult]
+        self.inbound_final_output = None
+        self.inbound_filters_outputs = []    # List[FilterResult]
         self.llm_outputs = []               # List[str]
-        self.actual_behaviors = []          # Final decision: ALLOWED, BLOCKED
-        self.results = []                   # Pass/fail list
+        self.outbound_final_output = None
+        self.outbound_filters_outputs = []   # List[FilterResult]
+        self.result = None                   # T/F both (in & out) passed?

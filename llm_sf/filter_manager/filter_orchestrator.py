@@ -21,18 +21,12 @@ class FilterOrchestrator:
         return self
 
     def run(self, text: str) -> FilterResult:
-
         context = Context(text)
-        return self._run(context)
-
-
-    def _run(self, context: Context) -> FilterResult:
-
         results = []
         with ThreadPoolExecutor() as executor:
             futures = [
                 executor.submit(
-                    self._run_filters,
+                    self._run_filter,
                     filtr,
                     context
                 )
@@ -41,9 +35,9 @@ class FilterOrchestrator:
             for future in as_completed(futures):
                 results.append(future.result())
 
-        return self.decision_maker.make_decision(results)
+        return FilterResultsAggregator(self.decision_maker.make_decision(results), results)
 
-    def _run_filters(self, filtr: BaseFilter, context: Context) -> FilterResult:
+    def _run_filter(self, filtr: BaseFilter, context: Context) -> FilterResult:
         return filtr.run_filter(context)
 
 
