@@ -25,7 +25,7 @@ if __name__ == "__main__":
         test_cases.append(temp)
 
     for test in test_cases:
-        test.run(orchestrator, ts.call_llm)
+        test.run(ts.call_llm, orchestrator, None)
         ts.print_test_summary(test)
 
     ts.compute_overall_metrics(test_cases)
