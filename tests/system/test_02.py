@@ -1,4 +1,4 @@
-# test_02.py - system: d:qa:-Lt/d
+# test_02.py - system: d:a:-Lt(0.55)/d
 # 
 import requests
 import csv

@@ -29,6 +29,13 @@ class Constants:
             return [row[1] for row in reader if len(row) >= 1]
     
     @staticmethod
+    def load_clean_sentences():
+        with open(Constants.CLEAN_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
+            return [row[0] for row in reader if len(row) >= 1]
+
+    @staticmethod
     def load_disablings():
         with open(Constants.DISABLINGS_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)

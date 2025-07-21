@@ -10,9 +10,10 @@ class SystemTestCase:
         self.inbound_filter_outputs = []    # List[FilterResult]
         self.outbound_filter_outputs = []   # List[FilterResult]
         self.llm_outputs = []               # List[str]
-        self.actual_behaviors = []          # Final decision: ALLOWED, BLOCKED, SANITIZED
+        self.actual_behaviors = []          # Final decision: ALLOWED, BLOCKED
         self.results = []                   # Pass/fail list
 
+    # why run is in the object that carries informations?
     def run(self, call_llm_fn, inbound_orchestrator=None, outbound_orchestrator=None):
         for prompt in self.prompts:
             if inbound_orchestrator:
