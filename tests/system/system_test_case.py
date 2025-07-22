@@ -8,9 +8,9 @@ class SystemTestCase:
         self.expected_out = expected_out
 
         # Results tracking
-        self.inbound_final_output = None
+        self.inbound_dm_output = None
         self.inbound_filters_outputs = []    # List[FilterResult]
         self.llm_outputs = []               # List[str]
-        self.outbound_final_output = None
+        self.outbound_dm_output = None
         self.outbound_filters_outputs = []   # List[FilterResult]
-        self.result = None                   # T/F both (in & out) passed?
+        self.is_passed = None                   # T/F both (in & out) passed?

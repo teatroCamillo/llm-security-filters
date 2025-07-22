@@ -1,8 +1,8 @@
-# test_01.py - system: p:o:t/dL-
-# See that the attack will pass if the wrong filter is set. An example of inappropriate use of a filter.
+# test_01.py - system: p:q:t/dL-
+# See that the attack will pass if the wrong filter is set. An example of inappropriate use of a filter. DO NOT DO THAT.
 import requests
 import csv
-from tests.system.test_system_case import SystemTestCase
+from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filter_manager.decision_maker import DecisionMaker
@@ -22,13 +22,14 @@ if __name__ == "__main__":
     for i, s in enumerate(Constants.load_profanity_sentences()):
         temp = SystemTestCase(
             prompts=[s],
-            expected_behavior=Constants.BLOCKED,
+            expected_in=Constants.BLOCKED,
+            expected_out=None,
             name=f"Profanity_{i}"
         )
         test_cases.append(temp)
 
     for test in test_cases:
-        test.run(ts.call_llm, orchestrator)
+        ts.run(test, orchestrator, None)
         ts.print_test_summary(test)
 
     ts.compute_overall_metrics(test_cases)

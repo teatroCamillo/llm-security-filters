@@ -2,6 +2,7 @@
 import csv
 from better_profanity import profanity
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
 # the filter is a place to sanitization! not orchestrator

@@ -2,7 +2,7 @@
 # 
 import requests
 import csv
-from tests.system.test_system_case import SystemTestCase
+from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filter_manager.decision_maker import DecisionMaker
@@ -22,7 +22,8 @@ if __name__ == "__main__":
     for i, s in enumerate(Constants.load_clean_sentences()):
         temp = SystemTestCase(
             prompts=[s],
-            expected_behavior=Constants.ALLOWED,
+            expected_in=Constants.ALLOWED,
+            expected_out=None,
             name=f"A_{i}"
         )
         test_cases.append(temp)
@@ -31,14 +32,15 @@ if __name__ == "__main__":
     for i, s in enumerate(Constants.load_profanity_sentences()):
         temp = SystemTestCase(
             prompts=[s],
-            expected_behavior=Constants.BLOCKED,
+            expected_in=Constants.BLOCKED,
+            expected_out=None,
             name=f"B_{i}"
         )
         test_cases.append(temp)
 
 
     for test in test_cases:
-        test.run(ts.call_llm, inbound_orch, None)
+        ts.run(test, inbound_orch, None)
         ts.print_test_summary(test)
 
     ts.compute_overall_metrics(test_cases)

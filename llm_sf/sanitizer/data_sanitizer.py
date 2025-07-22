@@ -1,6 +1,6 @@
 # data_sanitizer.py
 from typing import List
-from llm_sf.filters.base_filter import FilterResult
+from llm_sf.filter_manager.filter_result import FilterResult
 
 class DataSanitizer:
     """

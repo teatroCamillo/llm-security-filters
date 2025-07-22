@@ -1,7 +1,7 @@
-# test_00.py - system: p:o:ab/pL-
+# test_00.py - system: p:q:ab/pL-
 import requests
 import csv
-from tests.system.test_system_case import SystemTestCase
+from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filters.profanity_filter import ProfanityFilter
@@ -19,7 +19,8 @@ if __name__ == "__main__":
     for i, s in enumerate(Constants.load_profanity_sentences()):
         temp = SystemTestCase(
             prompts=[s],
-            expected_behavior=Constants.BLOCKED,
+            expected_in=Constants.BLOCKED,
+            expected_out=None,
             name=f"BlockProfanity_{i}"
         )
         test_cases.append(temp)

@@ -2,7 +2,9 @@
 import re
 import math
 from collections import Counter
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter
+from llm_sf.filter_manager.context import Context
+from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):

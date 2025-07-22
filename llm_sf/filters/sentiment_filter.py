@@ -4,7 +4,8 @@ import csv
 import re
 import string
 from nltk.sentiment import SentimentIntensityAnalyzer
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter
+from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 from llm_sf.utils.word_mutator import WordMutator
 

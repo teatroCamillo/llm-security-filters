@@ -1,7 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
-from llm_sf.filters.context import Context
+from llm_sf.filters.base_filter import BaseFilter
+from llm_sf.filter_manager.context import Context
+from llm_sf.filter_manager.filter_result import FilterResult
+from llm_sf.filter_manager.filter_results_aggregator import FilterResultsAggregator
 from llm_sf.sanitizer.data_sanitizer import DataSanitizer
 from llm_sf.filter_manager.decision_maker import DecisionMaker
 from llm_sf.utils.constants import Constants
