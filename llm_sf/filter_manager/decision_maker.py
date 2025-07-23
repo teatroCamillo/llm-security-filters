@@ -17,6 +17,7 @@ class DecisionMaker:
         self.threshold = threshold
 
     def make_decision(self, results: List[FilterResult]) -> FilterResult:
+        original_text = results[0].metadata.get("original_text", "")
         if self.mode == "allow-block":
             for r in results:
                 if r.verdict == Constants.BLOCKED:
@@ -29,7 +30,7 @@ class DecisionMaker:
             return FilterResult(
                 verdict=Constants.ALLOWED,
                 reason="All filters allowed",
-                metadata={}
+                metadata={"original_text": original_text}
             )
 
         elif self.mode == "threshold":
@@ -51,13 +52,13 @@ class DecisionMaker:
                 return FilterResult(
                     verdict=Constants.BLOCKED,
                     reason=f"Threshold exceeded: {aggregate_score:.2f} >= {self.threshold}",
-                    metadata={"aggregate_score": aggregate_score}
+                    metadata={"original_text": original_text, "aggregate_score": aggregate_score}
                 )
             else:
                 return FilterResult(
                     verdict=Constants.ALLOWED,
                     reason=f"Threshold not exceeded: {aggregate_score:.2f} < {self.threshold}",
-                    metadata={"aggregate_score": aggregate_score}
+                    metadata={"original_text": original_text, "aggregate_score": aggregate_score}
                 )
 
         raise ValueError(f"Unknown decision mode: {self.mode}")

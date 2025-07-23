@@ -2,7 +2,7 @@ import requests
 from llm_sf.utils.constants import Constants
 from tests.system.system_test_case import SystemTestCase
 from llm_sf.filter_manager.filter_result import FilterResult
-from llm_sf.filter_manager.filter_results_aggregator import FilterResultsAggregator  # Assuming this is where it is
+from llm_sf.filter_manager.filter_results_aggregator import FilterResultsAggregator
 
 class TestSystem:
 

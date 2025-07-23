@@ -33,7 +33,7 @@ class ProfanityFilter(BaseFilter):
                 return FilterResult(
                     verdict=Constants.BLOCKED,
                     reason="Detected profanity. 'block_on_detect' is True.",
-                    metadata={"risk_score": risk_score, "weight": self.weight}
+                    metadata={"original_text": context.original_text, "risk_score": risk_score, "weight": self.weight}
                 )
             else:
                 sanitized_text = profanity.censor(text, self.censor_char)
@@ -41,6 +41,7 @@ class ProfanityFilter(BaseFilter):
                     verdict=Constants.SANITIZED,
                     reason="Detected profanity. 'block_on_detect' is False -> sanitize suggested.",
                     metadata={
+                        "original_text": context.original_text,
                         "sanitized_text": sanitized_text,
                         "risk_score": risk_score, 
                         "weight": self.weight    
@@ -50,7 +51,7 @@ class ProfanityFilter(BaseFilter):
         return FilterResult(
             verdict=Constants.ALLOWED,
             reason="No profanity detected.",
-            metadata={"risk_score": 0.0, "weight": self.weight}
+            metadata={"original_text": context.original_text, "risk_score": 0.0, "weight": self.weight}
         )
 
     def compute_risk_score(self, context) -> float:

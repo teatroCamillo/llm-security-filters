@@ -30,6 +30,7 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         if findings:
             reasons = ", ".join([r['reason'] for r in findings])
             metadata = {
+                "original_text": context.original_text,
                 "risk_score": risk_score,
                 "weight": self.weight,
                 "triggers": [r['reason'] for r in findings],
@@ -50,7 +51,12 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
 
         return FilterResult(
             verdict=Constants.ALLOWED,
-            reason="No disabling or injection attempt detected."
+            reason="No disabling or injection attempt detected.",
+            metadata={
+                "original_text": context.original_text,
+                "risk_score": risk_score,
+                "weight": self.weight,
+            }
         )
 
     def _detect_suspicious_phrases(self, text):
