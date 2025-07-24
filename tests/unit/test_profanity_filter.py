@@ -12,7 +12,7 @@ def load_profanity_sentences():
         return [row[0] for row in reader if len(row) >= 1]
 
 def load_clean_sentences():
-    with open(Constants.CLEAN_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
+    with open(Constants.CLEAN_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             next(reader, None)
             return [row[0] for row in reader if len(row) >= 1]

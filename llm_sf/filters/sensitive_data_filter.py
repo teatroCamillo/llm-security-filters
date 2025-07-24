@@ -1,4 +1,4 @@
-# confidential_and_sensitive_data_filter.py
+# sensitive_data_filter.py
 import re
 from dataprofiler import Profiler, ProfilerOptions
 from dataprofiler.labelers.data_labelers import DataLabeler
@@ -7,7 +7,7 @@ from llm_sf.filter_manager.context import Context
 from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
-class ConfidentialAndSensitiveDataFilter(BaseFilter):
+class SensitiveDataFilter(BaseFilter):
 
     def __init__(
         self, 
@@ -124,9 +124,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
         )
 
         risk_score = round(min(total_severity / MAX_TOTAL_SEVERITY, 1.0), 2)
-
-        print("entities:", [e["label"] for e in entities])
-        print("total_severity:", total_severity)
-        print("risk_score:", risk_score)
-
+        # print("entities:", [e["label"] for e in entities])
+        # print("total_severity:", total_severity)
+        # print("risk_score:", risk_score)
         return risk_score
