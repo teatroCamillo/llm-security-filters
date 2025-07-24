@@ -5,20 +5,11 @@ from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filter_manager.context import Context
 from llm_sf.utils.constants import Constants
 
-# Two load methods same as in constants - remove them when whole will be working as expected. For now from constants load restricted set of data 
-# to other places.
-# def load_profanity_sentences():
-#     with open(Constants.PROFANITY_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
-#         reader = csv.reader(csvfile)
-#         next(reader, None)
-#         return [row[1] for row in reader if len(row) >= 1]
-
 def load_profanity_sentences():
-    with open(Constants.PROFANITY_SENTENCES_FULLv2_CSV, newline='', encoding='utf-8') as csvfile:
+    with open(Constants.PROFANITY_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         next(reader, None)
         return [row[0] for row in reader if len(row) >= 1]
-
 
 def load_clean_sentences():
     with open(Constants.CLEAN_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
@@ -81,3 +72,39 @@ def test_custom_badwords_blocking():
     pf = ProfanityFilter(custom_badwords=["foobar"])
     result = pf.run_filter(context)
     assert result.verdict == Constants.BLOCKED
+
+def test_compute_risk_score_no_profanity():
+    context = Context("This is a clean sentence.")
+    pf = ProfanityFilter()
+    score = pf.compute_risk_score(context)
+    assert score == 0.0
+
+def test_compute_risk_score_single_word_profanity():
+    context = Context("damn")
+    pf = ProfanityFilter()
+    score = pf.compute_risk_score(context)
+    assert score == 1.0
+
+def test_compute_risk_score_mixed_content():
+    context = Context("this is damn bad")
+    pf = ProfanityFilter()
+    score = pf.compute_risk_score(context)
+    assert score == 0.2
+
+def test_compute_risk_score_multiple_profanities():
+    context = Context("damn hell crap")
+    pf = ProfanityFilter()
+    score = pf.compute_risk_score(context)
+    assert score == 1.0
+
+def test_compute_risk_score_custom_badwords():
+    context = Context("foobar test")
+    pf = ProfanityFilter(custom_badwords=["foobar"])
+    score = pf.compute_risk_score(context)
+    assert score == 0.5
+
+def test_compute_risk_score_partial_match_should_not_count():
+    context = Context("assassin")
+    pf = ProfanityFilter()
+    score = pf.compute_risk_score(context)
+    assert score == 0.0

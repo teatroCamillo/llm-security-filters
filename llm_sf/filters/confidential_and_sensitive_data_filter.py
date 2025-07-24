@@ -13,20 +13,12 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
         self, 
         weight: float = 1.0
     ):
-        super().__init__(block_on_detect=block_on_detect, weight=weight)
-
+        super().__init__(weight=weight)
         self.labeler = DataLabeler(labeler_type='unstructured')
 
     def run_filter(self, context):
 
         text = context.current_text
-    #     lable_map:  
-    #     {'PAD': 0, 'UNKNOWN': 1, 'ADDRESS': 2, 'BAN': 3, 'CREDIT_CARD': 4, 'DATE': 5, 
-    #     'TIME': 6, 'DATETIME': 7, 'DRIVERS_LICENSE': 8, 'EMAIL_ADDRESS': 9, 'UUID': 10, 
-    #     'HASH_OR_KEY': 11, 'IPV4': 12, 'IPV6': 13, 'MAC_ADDRESS': 14, 'PERSON': 15, 
-    #     'PHONE_NUMBER': 16, 'SSN': 17, 'URL': 18, 'US_STATE': 19, 'INTEGER': 20, 'FLOAT': 21, 'QUANTITY': 22, 'ORDINAL': 23}
-    #     """
-        # Labels we consider sensitive
         sensitive_labels = {
             'PAD',
             'ADDRESS',
@@ -58,7 +50,6 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
             
             label_map_reverse = {v: k for k, v in self.labeler.label_mapping.items()}
             label_names_seq = [label_map_reverse[int(idx)] for idx in label_indices]
-            print("label names: ", label_names_seq)
 
             entities = []
             current = None
