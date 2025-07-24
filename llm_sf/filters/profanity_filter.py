@@ -5,18 +5,15 @@ from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
-# FIX sanit or remove
-# the filter is a place to sanitization! not orchestrator
 class ProfanityFilter(BaseFilter):
 
     def __init__(
         self,
-        block_on_detect: bool = True, 
         weight: float = 1.0,
         custom_badwords = None,
         censor_char: str = '*'
     ):
-        super().__init__(block_on_detect=block_on_detect, weight=weight)
+        super().__init__(weight=weight)
   
         self.censor_char = censor_char
         self._load_profanities_from_csv()
@@ -31,7 +28,7 @@ class ProfanityFilter(BaseFilter):
             risk_score = self.compute_risk_score(context)
             return FilterResult(
                 verdict=Constants.BLOCKED,
-                reason="Detected profanity. 'block_on_detect' is True.",
+                reason="Detected profanity.",
                 metadata={"original_text": context.original_text, "risk_score": risk_score, "weight": self.weight}
             )
 

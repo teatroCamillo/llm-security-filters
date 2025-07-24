@@ -17,10 +17,10 @@ class Constants:
     CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "conf_and_sensitive_phrases.csv"
     CLEAN_CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "clean_conf_and_sensitive_phrases.csv"
     DISABLINGS_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "disablings.csv"
+    
     # names
     ALLOWED = "allowed"
     BLOCKED = "blocked"
-    SANITIZED = "sanitized"
 
     OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 

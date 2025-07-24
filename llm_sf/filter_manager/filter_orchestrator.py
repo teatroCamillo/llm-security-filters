@@ -8,17 +8,13 @@ from llm_sf.sanitizer.data_sanitizer import DataSanitizer
 from llm_sf.filter_manager.decision_maker import DecisionMaker
 from llm_sf.utils.constants import Constants
 
-# it isn't the place to sanitize - the filter is.
 class FilterOrchestrator:
 
-
     def __init__(self, dm: DecisionMaker = DecisionMaker()):
-
         self._filters: List[BaseFilter] = []
         self.decision_maker = dm
 
     def add_filter(self, filtr: BaseFilter):
-
         self._filters.append(filtr)
         return self
 

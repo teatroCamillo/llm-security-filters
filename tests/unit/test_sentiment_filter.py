@@ -28,11 +28,6 @@ def test_block(sentence, word):
     print('Result:', result)
     assert result.verdict == Constants.BLOCKED
 
-# CONSIDER SANITIZATION approach
-# @pytest.mark.parametrize("sentence,word", load_profanity_sentences())
-# def test_sanitize(sentence, word):
-#     pass
-
 @pytest.mark.parametrize("sentence", load_clean_sentences())
 def test_allow(sentence):
     context = Context(sentence)

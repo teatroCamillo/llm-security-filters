@@ -31,7 +31,6 @@ def test_block(sentence):
     context = Context(sentence)
     pf = ProfanityFilter()
     result = pf.run_filter(context)
-
     assert result.verdict == Constants.BLOCKED
 
 # @pytest.mark.parametrize("sentence", load_clean_sentences())

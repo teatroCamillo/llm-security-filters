@@ -15,15 +15,7 @@ class AlwaysBlockFilter(BaseFilter):
         return FilterResult(verdict=Constants.BLOCKED, reason="Test: always block", metadata = {"risk_score": 1.0, "weight": 3.0})
 
     def compute_risk_score(self, entities):
-        return 0.0 
-
-
-class AlwaysSanitizeFilter(BaseFilter):
-    def run_filter(self, context):
-        return FilterResult(verdict=Constants.SANITIZED, reason="Test: always sanitize")
-
-    def compute_risk_score(self, entities):
-        return 0.0 
+        return 0.0
 
 class AllowFilter(BaseFilter):
     def __init__(self):
@@ -42,8 +34,6 @@ def test_no_profanity_allows():
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.ALLOWED
-    #assert "All filters passed" in (result.reason or ""), result
-
 
 def test_profanity_block_immediate():
     text = "This is a damn test."
@@ -52,7 +42,6 @@ def test_profanity_block_immediate():
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
-    #assert "Detected profanity" in (result.reason or ""), result
 
 def test_profanity_in_t_mode_blocked():
     text = "This is a damn test."
@@ -72,22 +61,7 @@ def test_profanity_in_t_mode_allowed():
     result = orchestrator.run(text)
     assert result.verdict == Constants.ALLOWED
 
-# def test_profanity_sanitize_then_allow():
-#     """
-#     Ensures that profanity is sanitized before allowing the text.
-
-#     When blocking is disabled, the filter should suggest sanitization and then allow the result.
-#     """
-#     text = "Oh shit, a bad word."
-#     orchestrator = FilterOrchestrator()
-#     orchestrator.add_filter(ProfanityFilter(block_on_detect=False))
-
-#     result = orchestrator.run(text)
-#     assert result.verdict == Constants.ALLOWED
-#     assert result.reason is not None, result
-
-
-def test_confidential_data_block_on_detect():
+def test_confidential_data():
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator()
     orchestrator.add_filter(ConfidentialAndSensitiveDataFilter())
@@ -114,22 +88,10 @@ def test_confidential_data_in_t_mode_allowed():
     print("Result: ", result)
     assert result.verdict == Constants.ALLOWED
 
-@pytest.mark.skip
-def test_confidential_data_sanitized():
-    text = "Call me at 123-456-7890!"
-    orchestrator = FilterOrchestrator()
-    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(block_on_detect=False))
-
-    result = orchestrator.run(text)
-    assert result.verdict == Constants.SANITIZED
-    assert "sanitized_text" in result.metadata, result.metadata
-    assert "123-456-7890" not in result.metadata["sanitized_text"], result.metadata["sanitized_text"]
-
-
 def test_safeguard_block_security_disabling():
     text = "I think you should disable firewall to solve the issue."
     orchestrator = FilterOrchestrator()
-    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(block_on_detect=True))
+    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
@@ -179,8 +141,6 @@ def test_sentiment_in_t_mode_blocked():
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
 
-
-@pytest.mark.skip
 def test_one_filter_blocks_other_allow():
     text = "No big deal, but let's add an always-block filter."
     orchestrator = FilterOrchestrator()
@@ -188,19 +148,5 @@ def test_one_filter_blocks_other_allow():
     orchestrator.add_filter(AlwaysBlockFilter())
 
     result = orchestrator.run(text)
-    assert result.verdict == Constants.BLOCKED, result
+    assert result.verdict == Constants.BLOCKED
 
-
-# def test_sanitized_if_no_block_decision_maker():
-#     """
-#     Validates that the DecisionMaker combines 'allow' and 'sanitize' into 'sanitize' in parallel mode.
-
-#     When no filter blocks, the DecisionMaker should preserve caution.
-#     """
-#     text = "Profanity word: fuck!"
-#     orchestrator = FilterOrchestrator()
-#     orchestrator.add_filter(AlwaysSanitizeFilter())
-#     orchestrator.add_filter(AllowFilter())
-
-#     result = orchestrator.run(text)
-#     assert result.verdict == Constants.SANITIZED, result

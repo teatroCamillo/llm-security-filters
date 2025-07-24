@@ -26,7 +26,6 @@ def test_block(phrase):
 
     assert isinstance(result, FilterResult)
 
-
 @pytest.mark.parametrize("phrase", load_clean_data())
 def test_allow(phrase):
     context = Context(phrase)
@@ -39,7 +38,6 @@ def test_allow(phrase):
 def test_allow_p():
     phrase = 'The weather today is sunny with mild winds'
     context = Context(phrase)
-    print("context: ", context)
     filter_obj = ConfidentialAndSensitiveDataFilter()
     result = filter_obj.run_filter(context)
 

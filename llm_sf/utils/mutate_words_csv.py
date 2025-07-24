@@ -26,7 +26,7 @@ def main():
         writer.writerow(['original', 'mutation'])
         writer.writerows(all_rows)
 
-    print(f"Zapisano {len(all_rows)} mutacji do pliku '{OUTPUT_FILE}'.")
+    print(f"Saved {len(all_rows)} mutations to file '{OUTPUT_FILE}'.")
 
 if __name__ == "__main__":
     main()

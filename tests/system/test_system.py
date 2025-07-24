@@ -34,10 +34,7 @@ class TestSystem:
                     print("test_case.is_passed: ", test_case.is_passed)
                     continue
 
-                user_input_filtered = test_case.inbound_dm_output.metadata.get(
-                    "sanitized_text" if test_case.inbound_dm_output and test_case.inbound_dm_output.verdict == Constants.SANITIZED else "final_text",
-                    ""
-                )
+                user_input_filtered = test_case.inbound_dm_output.metadata.get("original_text", "")
             else:
                 test_case.inbound_dm_output = None
                 test_case.inbound_filters_outputs.append(None)

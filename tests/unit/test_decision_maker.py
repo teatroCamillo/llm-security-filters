@@ -4,7 +4,6 @@ from llm_sf.filters.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
 # allow-block TESTS 
-
 @pytest.fixture
 def dm():
     return DecisionMaker()
@@ -27,15 +26,6 @@ def test_block_has_priority(dm):
     assert decision.verdict == Constants.BLOCKED
     assert decision.reason == "bad content"
 
-# def test_sanitize_if_no_block(dm):
-#     results = [
-#         FilterResult(verdict=Constants.ALLOWED, reason="clean", metadata={}),
-#         FilterResult(verdict=Constants.SANITIZED, reason="remove PII", metadata={})
-#     ]
-#     decision = dm.make_decision(results)
-#     assert decision.verdict == Constants.SANITIZED
-#     assert decision.reason == "remove PII"
-
 def test_single_block(dm):
     result = [FilterResult(verdict=Constants.BLOCKED, reason="explicit", metadata={})]
     decision = dm.make_decision(result)
@@ -45,30 +35,6 @@ def test_single_allow(dm):
     result = [FilterResult(verdict=Constants.ALLOWED, reason="innocent", metadata={})]
     decision = dm.make_decision(result)
     assert decision.verdict == Constants.ALLOWED
-
-# def test_single_sanitize(dm):
-#     result = [FilterResult(verdict=Constants.SANITIZED, reason="needs cleanup", metadata={})]
-#     decision = dm.make_decision(result)
-#     assert decision.verdict == Constants.SANITIZED
-
-
-# def test_multiple_sanitizes(dm):
-#     results = [
-#         FilterResult(verdict=Constants.SANITIZED, reason="clean A", metadata={}),
-#         FilterResult(verdict=Constants.SANITIZED, reason="clean B", metadata={})
-#     ]
-#     decision = dm.make_decision(results)
-#     assert decision.verdict == Constants.SANITIZED
-#     assert decision.reason in ["clean A", "clean B"]
-
-# def test_mixed_allow_sanitize(dm):
-#     results = [
-#         FilterResult(verdict=Constants.ALLOWED, reason="fine", metadata={}),
-#         FilterResult(verdict=Constants.SANITIZED, reason="mask email", metadata={}),
-#         FilterResult(verdict=Constants.ALLOWED, reason="fine again", metadata={})
-#     ]
-#     decision = dm.make_decision(results)
-#     assert decision.verdict == Constants.SANITIZED
 
 def test_metadata_propagation_on_block(dm):
     meta = {"source": "filter1"}
@@ -172,7 +138,7 @@ def test_threshold_missing_weight(threshold_dm):
         FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.6}),
     ]
     decision = threshold_dm.make_decision(results)
-    assert decision.verdict == Constants.BLOCKED  # default weight is 1.0
+    assert decision.verdict == Constants.BLOCKED
 
 
 def test_threshold_zero_total_weight(threshold_dm):
@@ -181,7 +147,7 @@ def test_threshold_zero_total_weight(threshold_dm):
         FilterResult(Constants.ALLOWED, "ok", {"risk_score": 0.5, "weight": 0}),
     ]
     decision = threshold_dm.make_decision(results)
-    assert decision.verdict == Constants.ALLOWED  # no weight contributes, aggregate_score = 0
+    assert decision.verdict == Constants.ALLOWED
 
 
 def test_threshold_metadata_contains_aggregate_score(threshold_dm):

@@ -22,8 +22,5 @@ def test_block():
     print(dataprofiler.__version__)
     pass
 
-def test_sanitize():
-    pass
-
 def test_allow():
     pass

@@ -8,11 +8,8 @@ from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
-    """
-    Detects attempts to disable security features or inject malicious instructions.
-    """
 
-    def __init__(self, block_on_detect: bool = True, weight: float = 1.0):
+    def __init__(self, weight: float = 1.0):
         super().__init__(block_on_detect=block_on_detect, weight=weight)
 
     def run_filter(self, context):
@@ -36,18 +33,12 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
                 "triggers": [r['reason'] for r in findings],
             }
 
-            if self.block_on_detect:
-                return FilterResult(
-                    verdict=Constants.BLOCKED,
-                    reason=f"Security threat detected: {reasons}",
-                    metadata=metadata
-                )
-            else:
-                return FilterResult(
-                    verdict=Constants.SANITIZED,
-                    reason=f"Sanitization required: {reasons}",
-                    metadata=metadata
-                )
+            return FilterResult(
+                verdict=Constants.BLOCKED,
+                reason=f"Security threat detected: {reasons}",
+                metadata=metadata
+            )
+
 
         return FilterResult(
             verdict=Constants.ALLOWED,
@@ -114,15 +105,6 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         return {"matched": False}
 
     def compute_risk_score(self, findings: list) -> float:
-        """
-        Computes normalized risk score based on detected issues.
-
-        Args:
-            findings (list): List of dicts from _detect_* methods.
-
-        Returns:
-            float: Risk score [0.0, 1.0]
-        """
 
         MAX_FINDINGS = 4  # suspicious, jailbreak, repeated, entropy
         MAX_WEIGHT = 0.7  # if you consider max weight of one trigger
@@ -130,7 +112,3 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
 
         total_weight = sum(f.get("weight", 0.1) for f in findings)
         return round(min(total_weight / MAX_SEVERITY, 1.0), 2)
-
-        # total_weight = sum(f.get("weight", 0.1) for f in findings)
-        # MAX_SEVERITY = 3.0
-        # return round(min(total_weight / MAX_SEVERITY, 1.0), 2)

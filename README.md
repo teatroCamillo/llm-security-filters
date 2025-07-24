@@ -14,7 +14,9 @@ pytest -s .\tests\unit\test_safeguard_against_disabling_security_features_filter
 python -m tests.system.test_00      : -m used to run a module as a script. Relative imports work as expected.
 
 ### tests with .md report file
-python generate_test_report.py (remember to point the test target in the generate_test_report.py)
+python generate_test_report.py
+or (remember to point the test target in the generate_test_report.py)
+python generate_test_report.py tests/unit/test_profanity_filter.py::test_block 
 
 ## Cache
 Get-ChildItem -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force

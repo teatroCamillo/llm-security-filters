@@ -1,7 +1,6 @@
 import itertools
 from typing import Dict, List
 
-
 class WordMutator:
     def __init__(self, custom_map: Dict[str, List[str]] = None):
         self.char_map = {
