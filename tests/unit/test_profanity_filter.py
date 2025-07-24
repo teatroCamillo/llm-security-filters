@@ -33,15 +33,14 @@ def test_block(sentence):
     result = pf.run_filter(context)
     assert result.verdict == Constants.BLOCKED
 
-# @pytest.mark.parametrize("sentence", load_clean_sentences())
-# def test_allow(sentence):
-#     context = Context(sentence)
-#     pf = ProfanityFilter()
-#     result = pf.run_filter(context)
+@pytest.mark.parametrize("sentence", load_clean_sentences())
+def test_allow(sentence):
+    context = Context(sentence)
+    pf = ProfanityFilter()
+    result = pf.run_filter(context)
 
-#     assert result.verdict == Constants.ALLOWED
-#     assert result.reason == "No profanity detected."
-
+    assert result.verdict == Constants.ALLOWED
+    assert result.reason == "No profanity detected."
 
 def test_empty_string():
     context = Context("")

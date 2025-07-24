@@ -1,5 +1,6 @@
 # profanity_filter.py
 import csv
+import re
 from better_profanity import profanity
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.filter_manager.filter_result import FilterResult
@@ -22,7 +23,7 @@ class ProfanityFilter(BaseFilter):
             profanity.add_censor_words(custom_badwords)
 
     def run_filter(self, context) -> FilterResult:
-        text = context.current_text
+        text = re.sub(r"[\'\.\?]", '', context.current_text)# self.add_whitespace_around_punctuation(context.current_text) # context.current_text# 
 
         if profanity.contains_profanity(text):
             risk_score = self.compute_risk_score(context)
@@ -65,7 +66,7 @@ class ProfanityFilter(BaseFilter):
 
     def _load_profanities_from_csv(self):
         try:
-            with open(Constants.PROFANITIES_CSV, newline='', encoding='utf-8') as csvfile:
+            with open(Constants.PROFANITIES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
             #with open(Constants.MUTATED_WORDS_CSV, newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
                 next(reader, None)

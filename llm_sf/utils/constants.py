@@ -7,6 +7,7 @@ class Constants:
     ROOT_DIR = Path(__file__).resolve().parent.parent.parent
     RESOURCES_DIR = ROOT_DIR / "resources"
     PROFANITIES_CSV = RESOURCES_DIR / "profanities_en.csv"
+    PROFANITIES_FULL_CSV = RESOURCES_DIR / "profanities_en_FULL.csv"
     PROFANITY_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences.csv"
     #FIX!
     PROFANITY_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences_FULL.csv"
