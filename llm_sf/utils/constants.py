@@ -8,7 +8,10 @@ class Constants:
     RESOURCES_DIR = ROOT_DIR / "resources"
     PROFANITIES_CSV = RESOURCES_DIR / "profanities_en.csv"
     PROFANITY_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences.csv"
+    #FIX!
     PROFANITY_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences_FULL.csv"
+    PROFANITY_SENTENCES_FULLv2_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences_FULLv2.csv"
+
     CLEAN_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "clean_sentences.csv"
     MUTATED_WORDS_CSV = RESOURCES_DIR / "mutated_words.csv"
     CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "conf_and_sensitive_phrases.csv"
