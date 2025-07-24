@@ -2,8 +2,9 @@
 import re
 from dataprofiler import Profiler, ProfilerOptions
 from dataprofiler.labelers.data_labelers import DataLabeler
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
-from llm_sf.filters.context import Context
+from llm_sf.filters.base_filter import BaseFilter
+from llm_sf.filter_manager.context import Context
+from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
 class ConfidentialAndSensitiveDataFilter(BaseFilter):
@@ -73,7 +74,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
         }
 
         try:
-            metadata = {"risk_score": 0.0, "weight": self.weight} 
+            metadata = {"original_text": context.original_text, "risk_score": 0.0, "weight": self.weight} 
             prediction = self.labeler.predict([text], predict_options={"show_confidences": True})
             label_indices = prediction['pred'][0]
             
@@ -99,14 +100,10 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
                         current = None
             if current:
                 entities.append(current)
-                
-            print("entities: ", entities)
-            print("IF before entities")
+
             if entities:
                 risk_score = self.compute_risk_score(entities)
-                metadata = {"risk_score": risk_score, "weight": self.weight}
-                print("risk_score: ", risk_score)
-                print("weight: ", self.weight)
+                metadata = {"original_text": context.original_text, "risk_score": risk_score, "weight": self.weight}
 
                 if self.block_on_detect:
                     return FilterResult(
@@ -126,7 +123,7 @@ class ConfidentialAndSensitiveDataFilter(BaseFilter):
                     return FilterResult(
                         verdict="sanitized",
                         reason="Sensitive data detected and redacted.",
-                        metadata={"sanitized_text": redacted_text, "risk_score": risk_score, "weight": self.weight}
+                        metadata={"original_text": context.original_text, "sanitized_text": redacted_text, "risk_score": risk_score, "weight": self.weight}
                     )
                 
             return FilterResult(

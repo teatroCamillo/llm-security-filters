@@ -2,19 +2,10 @@
 import re
 import math
 from collections import Counter
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter
+from llm_sf.filter_manager.context import Context
+from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
-
-"""
-What to do?
-1. expand suspe.phrases and jail patterns
-2. each technic should be represented by method, so extract suspicious_phrases to method
-3. improve _detect method that should go through all methods not only by one and return result. Should go by all and each method should
-return partial to calculate risk_score.
-4. Do not touch sanitization now. This element will be improved later!
-5. Provide compute_risk_score as it is in confidential_and_sensitive_data_filter.py. Provide correct method.
-6. provide _has_high_entropy()
-"""
 
 class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
     """
@@ -39,6 +30,7 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         if findings:
             reasons = ", ".join([r['reason'] for r in findings])
             metadata = {
+                "original_text": context.original_text,
                 "risk_score": risk_score,
                 "weight": self.weight,
                 "triggers": [r['reason'] for r in findings],
@@ -59,34 +51,46 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
 
         return FilterResult(
             verdict=Constants.ALLOWED,
-            reason="No disabling or injection attempt detected."
+            reason="No disabling or injection attempt detected.",
+            metadata={
+                "original_text": context.original_text,
+                "risk_score": risk_score,
+                "weight": self.weight,
+            }
         )
 
     def _detect_suspicious_phrases(self, text):
         phrases = [
-            "disable firewall", "turn off firewall", "deactivate firewall",
+            "disable firewall", "turn off firewall", "deactivate firewall", "shutdown firewall",
             "disable antivirus", "turn off antivirus", "uninstall antivirus", "deactivate antivirus",
-            "bypass security", "disable security features", "disabling security",
+            "bypass security", "disable security features", "disabling security", "weaken security",
             "remove endpoint protection", "kill security process", "terminate defender",
-            "disable defender", "stop antivirus service"
+            "disable defender", "stop antivirus service", "shut down antivirus", "turn antivirus off",
+            "turn off virus protection", "disable virus protection", "kill antivirus", "stop firewall",
+            "disable threat protection", "security off", "turn off threat detection"
         ]
+        
+        lowered = text.lower()
         for phrase in phrases:
-            if phrase in text:
+            if phrase in lowered:
                 return {"matched": True, "reason": f"Suspicious phrase: '{phrase}'", "weight": 0.6}
         return {"matched": False}
 
     def _detect_jailbreak_phrases(self, text):
         patterns = [
-            r"ignore all previous instructions",
-            r"disregard (all )?prior instructions",
-            r"please ignore your (previous|prior) directives",
-            r"bypass (the )?security",
-            r"say ['\"]i am hacked['\"]",
-            r"print ['\"]i hate human['\"]",
-            r"ignore (this|that) and do as i say",
-            r"forget previous rules",
-            r"override safety",
-            r"you are not bound by",
+            r"(?i)ignore (all )?(previous|prior|past) (instructions|directives|rules|commands)",
+            r"(?i)disregard (all )?(prior|previous|past) (instructions|directives|orders)",
+            r"(?i)please ignore your (previous|prior) (directives|instructions)",
+            r"(?i)bypass (the )?(safety|security|restrictions|filters)",
+            r"(?i)say ['\"]i am hacked['\"]",
+            r"(?i)print ['\"]i hate (humans?|people)['\"]",
+            r"(?i)ignore (this|that) and do as i say",
+            r"(?i)forget (previous|all) (rules|commands|restrictions)",
+            r"(?i)override (safety|restrictions|filters)",
+            r"(?i)you are not bound by",
+            r"(?i)pretend to be a malicious actor",
+            r"(?i)simulate a hack",
+            r"(?i)assist in breaking security",
         ]
         for pattern in patterns:
             if re.search(pattern, text):
@@ -119,6 +123,14 @@ class SafeguardAgainstDisablingSecurityFeaturesFilter(BaseFilter):
         Returns:
             float: Risk score [0.0, 1.0]
         """
+
+        MAX_FINDINGS = 4  # suspicious, jailbreak, repeated, entropy
+        MAX_WEIGHT = 0.7  # if you consider max weight of one trigger
+        MAX_SEVERITY = MAX_FINDINGS * MAX_WEIGHT
+
         total_weight = sum(f.get("weight", 0.1) for f in findings)
-        MAX_SEVERITY = 3.0
         return round(min(total_weight / MAX_SEVERITY, 1.0), 2)
+
+        # total_weight = sum(f.get("weight", 0.1) for f in findings)
+        # MAX_SEVERITY = 3.0
+        # return round(min(total_weight / MAX_SEVERITY, 1.0), 2)

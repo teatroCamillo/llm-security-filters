@@ -1,21 +1,18 @@
-# test_01.py - system: p:q:t/dL-
-# See that the attack will pass if the wrong filter is set. An example of inappropriate use of a filter. DO NOT DO THAT.
+# test_00.py - system: p:q:ab/pL-
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
-from llm_sf.filter_manager.decision_maker import DecisionMaker
-from llm_sf.filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
+from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.utils.constants import Constants
 
 if __name__ == "__main__":
 
     ts = TestSystem()
 
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm)
-    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
+    orchestrator = FilterOrchestrator()
+    orchestrator.add_filter(ProfanityFilter())
 
     test_cases = []
 
@@ -24,7 +21,7 @@ if __name__ == "__main__":
             prompts=[s],
             expected_in=Constants.BLOCKED,
             expected_out=None,
-            name=f"Profanity_{i}"
+            name=f"BlockProfanity_{i}"
         )
         test_cases.append(temp)
 

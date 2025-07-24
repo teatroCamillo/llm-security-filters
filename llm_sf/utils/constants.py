@@ -8,12 +8,15 @@ class Constants:
     RESOURCES_DIR = ROOT_DIR / "resources"
     PROFANITIES_CSV = RESOURCES_DIR / "profanities_en.csv"
     PROFANITY_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences.csv"
+    #FIX!
     PROFANITY_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences_FULL.csv"
+    PROFANITY_SENTENCES_FULLv2_CSV = ROOT_DIR / "tests" / "resources" / "profanity_sentences_FULLv2.csv"
+
     CLEAN_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "clean_sentences.csv"
     MUTATED_WORDS_CSV = RESOURCES_DIR / "mutated_words.csv"
     CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "conf_and_sensitive_phrases.csv"
     CLEAN_CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "clean_conf_and_sensitive_phrases.csv"
-
+    DISABLINGS_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "disablings.csv"
     # names
     ALLOWED = "allowed"
     BLOCKED = "blocked"
@@ -27,3 +30,24 @@ class Constants:
             reader = csv.reader(csvfile)
             next(reader, None)
             return [row[1] for row in reader if len(row) >= 1]
+    
+    @staticmethod
+    def load_clean_sentences():
+        with open(Constants.CLEAN_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
+            return [row[0] for row in reader if len(row) >= 1]
+
+    @staticmethod
+    def load_disablings():
+        with open(Constants.DISABLINGS_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
+            return [row[0] for row in reader if len(row) >= 1]
+
+    @staticmethod
+    def load_conf_and_sensitive_data():
+        with open(Constants.CONFIDENTIAL_AND_SENSITIVE_CSV, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
+            return [row[0] for row in reader]

@@ -4,7 +4,8 @@ import csv
 import re
 import string
 from nltk.sentiment import SentimentIntensityAnalyzer
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter
+from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 from llm_sf.utils.word_mutator import WordMutator
 
@@ -77,6 +78,7 @@ class SentimentFilter(BaseFilter):
                 verdict=verdict,
                 reason=f"Negative sentiment {scores['compound']} below threshold {self.threshold}",
                 metadata = {
+                    "original_text": context.original_text,
                     "sentiment_scores": scores,
                     "risk_score": risk_score,
                     "weight": self.weight
@@ -86,6 +88,7 @@ class SentimentFilter(BaseFilter):
             return FilterResult(
                 verdict=Constants.ALLOWED,
                 metadata = {
+                    "original_text": context.original_text,
                     "sentiment_scores": scores,
                     "risk_score": risk_score,
                     "weight": self.weight

@@ -1,5 +1,5 @@
 # base_filter.py
-from llm_sf.filters.filter_result import FilterResult
+from llm_sf.filter_manager.filter_result import FilterResult
 from abc import ABC, abstractmethod
 
 class BaseFilter(ABC):
