@@ -81,7 +81,7 @@ def test_compute_risk_score_with_empty_entity_list():
         ([{"label": "CREDIT_CARD"}, {"label": "PHONE_NUMBER"}], 0.4),
         ([{"label": "ADDRESS"}, {"label": "ADDRESS"}, {"label": "IPV4"}], 0.4),
         ([{"label": "TIME"}, {"label": "FLOAT"}, {"label": "UUID"}], 0.17),
-        ([{"label": "PAD"}, {"label": "ORDINAL"}], 0.0),
+        ([{"label": "ORDINAL"}, {"label": "ORDINAL"}], 0.0),
         ([{"label": "BAN"}, {"label": "HASH_OR_KEY"}, {"label": "DRIVERS_LICENSE"}], 0.63),
         ([{"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "EMAIL_ADDRESS"}], 0.7),
         ([{"label": "SSN"}, {"label": "SSN"}, {"label": "SSN"}], 1.0),

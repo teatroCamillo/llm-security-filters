@@ -15,12 +15,12 @@ class Constants:
 
     CLEAN_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "clean_sentences.csv"
     CLEAN_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "clean_sentences_FULL.csv"
-    MUTATED_WORDS_CSV = RESOURCES_DIR / "mutated_words.csv"
 
     CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "conf_and_sensitive_sentences.csv"
-    CLEAN_CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "clean_conf_and_sensitive_sentences.csv"
 
     DISABLINGS_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "disablings.csv"
+
+    MUTATED_WORDS_CSV = RESOURCES_DIR / "mutated_words.csv"
     
     # names
     ALLOWED = "allowed"

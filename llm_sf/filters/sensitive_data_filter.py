@@ -20,7 +20,6 @@ class SensitiveDataFilter(BaseFilter):
 
         text = context.current_text
         sensitive_labels = {
-            'PAD',
             'ADDRESS',
             'BAN',
             'CREDIT_CARD',
@@ -93,7 +92,6 @@ class SensitiveDataFilter(BaseFilter):
     def compute_risk_score(self, entities: list) -> float:
 
         SENSITIVITY_WEIGHTS = {
-            'PAD': 0.0, # Padding Token
             'ADDRESS': 0.4,
             'BAN': 0.5,  # Bank Account Number
             'CREDIT_CARD': 0.9,
