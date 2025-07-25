@@ -14,7 +14,7 @@ class ProfanityFilter(BaseFilter):
         custom_badwords = None
     ):
         super().__init__(weight=weight)
-        Constants.load_profanity_words(profanity)
+        profanity.add_censor_words(Constants.load_profanity_words())
         
         if custom_badwords:
             profanity.add_censor_words(custom_badwords)
