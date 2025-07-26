@@ -23,6 +23,9 @@ class Constants:
     DISABLINGS_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "disablings.csv"
 
     MUTATED_WORDS_CSV = RESOURCES_DIR / "mutated_words.csv"
+
+    JAILBREAK_PROMPTS_CSV = ROOT_DIR / "tests" / "resources" / "jailbreak_prompts.csv"
+    JAILBREAK_PROMPTS_FULL_CSV = ROOT_DIR / "tests" / "resources" / "jailbreak_prompts_FULL.csv"
     
     # names
     ALLOWED = "allowed"
@@ -95,4 +98,16 @@ class Constants:
                 return [row[0] for row in reader if len(row) >= 1]
         except Exception as e:
             print(f"Warning: Failed to load profanity sentences: {e}")
+            return []
+
+    @staticmethod
+    def load_jailbreak_prompts():
+        try:
+            #JAILBREAK_PROMPTS_FULL_CSV or JAILBREAK_PROMPTS_CSV
+            with open(Constants.JAILBREAK_PROMPTS_FULL_CSV, newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                next(reader, None)
+                return [row[0].strip() for row in reader if row]
+        except Exception as e:
+            print(f"Warning: Failed to load jailbreak prompts from CSV: {e}")
             return []

@@ -5,8 +5,8 @@ from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filter_manager.decision_maker import DecisionMaker
 from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filters.sentiment_filter import SentimentFilter
-from llm_sf.filters.confidential_and_sensitive_data_filter import ConfidentialAndSensitiveDataFilter
-from llm_sf.filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
+from llm_sf.filters.sensitive_data_filter import SensitiveDataFilter
+from llm_sf.filters.bypass_detection_filter import BypassDetectionFilter
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.utils.constants import Constants
 
@@ -64,7 +64,7 @@ def test_profanity_in_t_mode_allowed():
 def test_confidential_data():
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator()
-    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter())
+    orchestrator.add_filter(SensitiveDataFilter())
 
     result = orchestrator.run(text)
     print("Result: ", result)
@@ -74,7 +74,7 @@ def test_confidential_data():
 def test_confidential_data_in_t_mode_blocked():
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
-    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(weight=4.0))
+    orchestrator.add_filter(SensitiveDataFilter(weight=4.0))
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
@@ -82,7 +82,7 @@ def test_confidential_data_in_t_mode_blocked():
 def test_confidential_data_in_t_mode_allowed():
     text = "Call me at 123-456-7890!"
     orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
-    orchestrator.add_filter(ConfidentialAndSensitiveDataFilter(weight=1.0))
+    orchestrator.add_filter(SensitiveDataFilter(weight=1.0))
 
     result = orchestrator.run(text)
     print("Result: ", result)
@@ -91,7 +91,7 @@ def test_confidential_data_in_t_mode_allowed():
 def test_safeguard_block_security_disabling():
     text = "I think you should disable firewall to solve the issue."
     orchestrator = FilterOrchestrator()
-    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
+    orchestrator.add_filter(BypassDetectionFilter())
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
@@ -101,7 +101,7 @@ def test_safeguard_security_disabling_in_t_mode_blocked():
     text = "I think you should disable firewall to solve the issue."
     dm = DecisionMaker("threshold")
     orchestrator = FilterOrchestrator(dm)
-    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter(weight=3.0))
+    orchestrator.add_filter(BypassDetectionFilter(weight=3.0))
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.BLOCKED
@@ -110,7 +110,7 @@ def test_safeguard_security_disabling_in_t_mode_allowed():
     text = "I think you should disable firewall to solve the issue."
     dm = DecisionMaker("threshold")
     orchestrator = FilterOrchestrator(dm)
-    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
+    orchestrator.add_filter(BypassDetectionFilter())
 
     result = orchestrator.run(text)
     assert result.verdict == Constants.ALLOWED
