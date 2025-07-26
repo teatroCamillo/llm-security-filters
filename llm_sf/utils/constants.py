@@ -104,7 +104,7 @@ class Constants:
     def load_jailbreak_prompts():
         try:
             #JAILBREAK_PROMPTS_FULL_CSV or JAILBREAK_PROMPTS_CSV
-            with open(Constants.JAILBREAK_PROMPTS_FULL_CSV, newline='', encoding='utf-8') as csvfile:
+            with open(Constants.JAILBREAK_PROMPTS_CSV, newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
                 next(reader, None)
                 return [row[0].strip() for row in reader if row]
