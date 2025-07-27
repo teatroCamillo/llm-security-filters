@@ -18,8 +18,11 @@ def filter():
 
 @pytest.mark.parametrize("prompt", Constants.load_jailbreak_prompts())
 def test_should_block_due_to_jailbreak_patterns(prompt, filter):
+
     context = Context(prompt)
     result = filter.run_filter(context)
+    if result.verdict == Constants.ALLOWED:
+        print(prompt)
     assert result.verdict == Constants.BLOCKED
     assert "jailbreak" in result.reason.lower() or "pattern" in result.reason.lower()
 

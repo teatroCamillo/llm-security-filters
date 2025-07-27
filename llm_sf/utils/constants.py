@@ -26,6 +26,8 @@ class Constants:
 
     JAILBREAK_PROMPTS_CSV = ROOT_DIR / "tests" / "resources" / "jailbreak_prompts.csv"
     JAILBREAK_PROMPTS_FULL_CSV = ROOT_DIR / "tests" / "resources" / "jailbreak_prompts_FULL.csv"
+
+    JAILBREAK_PATTERNS_CSV = RESOURCES_DIR / "jailbreak_patterns.csv"
     
     # names
     ALLOWED = "allowed"
@@ -110,4 +112,18 @@ class Constants:
                 return [row[0].strip() for row in reader if row]
         except Exception as e:
             print(f"Warning: Failed to load jailbreak prompts from CSV: {e}")
+            return []
+
+    @staticmethod
+    def load_jailbreak_patterns():
+        patterns = []
+        try:
+            with open(Constants.JAILBREAK_PATTERNS_CSV, newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                next(reader, None)
+                for row in reader:
+                    patterns.append(row[0].strip())
+                return patterns
+        except Exception as e:
+            print(f"Warning: Failed to load jailbreak patterns from CSV: {e}")
             return []
