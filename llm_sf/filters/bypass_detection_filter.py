@@ -18,8 +18,8 @@ class BypassDetectionFilter(BaseFilter):
         results = []
 
         results.append(self._detect_jailbreak_phrases(text))
-        #results.append(self._detect_repeated_tokens(text))
-        #results.append(self._detect_high_entropy(text))
+        results.append(self._detect_repeated_tokens(text))
+        results.append(self._detect_high_entropy(text))
 
         findings = [r for r in results if r['matched']]
         risk_score = self.compute_risk_score(findings)
@@ -39,7 +39,6 @@ class BypassDetectionFilter(BaseFilter):
                 metadata=metadata
             )
 
-
         return FilterResult(
             verdict=Constants.ALLOWED,
             reason="No disabling or injection attempt detected.",
@@ -50,36 +49,10 @@ class BypassDetectionFilter(BaseFilter):
             }
         )
 
-    # def _detect_suspicious_phrases(self, text):
-    #     phrases = [
-    #         "disable firewall", "turn off firewall", "deactivate firewall", "shutdown firewall",
-    #         "disable antivirus", "turn off antivirus", "uninstall antivirus", "deactivate antivirus",
-    #         "bypass security", "disable security features", "disabling security", "weaken security",
-    #         "remove endpoint protection", "kill security process", "terminate defender",
-    #         "disable defender", "stop antivirus service", "shut down antivirus", "turn antivirus off",
-    #         "turn off virus protection", "disable virus protection", "kill antivirus", "stop firewall",
-    #         "disable threat protection", "security off", "turn off threat detection"
-    #     ]
-        
-    #     lowered = text.lower()
-    #     for phrase in phrases:
-    #         if phrase in lowered:
-    #             return {"matched": True, "reason": f"Suspicious phrase: '{phrase}'", "weight": 0.6}
-    #     return {"matched": False}
-
-    '''
-    https://github.com/verazuo/jailbreak_llms/blob/main/data/README.md
-    Jailbraks are divided into 14 categories: Child Sexual Abuse, Illegal Activity, Hate Speech, Malware Generation, 
-    Physical Harm, Economic Harm, Fraud, Pornography, Political Lobbying, Privacy Violence, Legal Opinion, Financial Advice, 
-    Health Consultation, and Government Decision.
-    No chance to cover all of them! 
-    Focus on one or few of them only for instance on Illegal Acitvity like trying to disable/bypass llm's security.
-    '''
-
     def _detect_jailbreak_phrases(self, text):
         for pattern in self.patterns:
             if re.search(pattern, text):
-                return {"matched": True, "reason": f"Jailbreak pattern: '{pattern}'", "weight": 0.7}
+                return {"matched": True, "reason": f"Jailbreak pattern: '{pattern}'", "weight": 0.8}
         return {"matched": False}
 
     def _detect_repeated_tokens(self, text, threshold=3):
@@ -103,7 +76,6 @@ class BypassDetectionFilter(BaseFilter):
             return 0.0
         total_weight = sum(f.get("weight", 0.1) for f in findings)
         max_possible_weight = sum([
-            0.6,  # Suspicious phrase
             0.8,  # Jailbreak
             0.4,  # Repeated tokens
             0.5,  # High entropy
