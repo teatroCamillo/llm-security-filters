@@ -17,6 +17,7 @@ class Constants:
     CLEAN_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "clean_sentences_FULL.csv"
 
     SENTIMENT_SENTENCES_FULL_CSV = ROOT_DIR / "tests" / "resources" / "sentiment_sentences.csv"
+    SENTIMENT_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" /"sentiment_sentences_PART.csv"
 
     CONFIDENTIAL_AND_SENSITIVE_CSV = ROOT_DIR / "tests" / "resources" / "conf_and_sensitive_sentences.csv"
 
@@ -28,6 +29,8 @@ class Constants:
     JAILBREAK_PROMPTS_FULL_CSV = ROOT_DIR / "tests" / "resources" / "jailbreak_prompts_FULL.csv"
 
     JAILBREAK_PATTERNS_CSV = RESOURCES_DIR / "jailbreak_patterns.csv"
+
+    HIGH_RISK_WORDS_CSV = RESOURCES_DIR / "high_risk_words.csv"
     
     # names
     ALLOWED = "allowed"
@@ -99,7 +102,7 @@ class Constants:
                 next(reader, None)
                 return [row[0] for row in reader if len(row) >= 1]
         except Exception as e:
-            print(f"Warning: Failed to load profanity sentences: {e}")
+            print(f"Warning: Failed to load sentiment sentences: {e}")
             return []
 
     @staticmethod
@@ -126,4 +129,15 @@ class Constants:
                 return patterns
         except Exception as e:
             print(f"Warning: Failed to load jailbreak patterns from CSV: {e}")
+            return []
+
+    @staticmethod
+    def load_high_risk_words():
+        try:
+            with open(Constants.HIGH_RISK_WORDS_CSV, newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                next(reader, None)
+                return [row[0].strip() for row in reader if row]
+        except Exception as e:
+            print(f"Warning: Failed to load high risk words from CSV: {e}")
             return []

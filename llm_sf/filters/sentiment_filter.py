@@ -17,14 +17,17 @@ class SentimentFilter(BaseFilter):
     def __init__(
         self,
         weight: float = 1.0, 
-        threshold=-0.7
+        threshold=-0.5
         ):
         super().__init__(weight=weight)
         self.threshold = threshold
         self.analyzer = SentimentIntensityAnalyzer()
         
         for word in Constants.load_profanity_words():
-            self._updadte_lexicon(word, -4.0)
+            self._update_lexicon(word, -4.0)
+        
+        for word in Constants.load_high_risk_words():
+            self._update_lexicon(word, -4.0)
 
     def run_filter(self, context) -> FilterResult:
         text = context.current_text
@@ -54,7 +57,7 @@ class SentimentFilter(BaseFilter):
                 }
             )
 
-    def _updadte_lexicon(self, word, score):
+    def _update_lexicon(self, word, score):
         self.analyzer.lexicon[word] = score
 
     def add_whitespace_around_punctuation(self, text):
