@@ -10,13 +10,13 @@ from llm_sf.utils.constants import Constants
 def filter():
     return SentimentFilter()
 
-@pytest.mark.parametrize("sentence", Constants.load_sentiment_sentences())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.SENTIMENT_SENTENCES_FULL_CSV))
 def test_should_block_sentence_with_negative_sentiment(sentence, filter):
     context = Context(sentence)
     result = filter.run_filter(context)
     assert result.verdict == Constants.BLOCKED
 
-@pytest.mark.parametrize("sentence", Constants.load_clean_sentences())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.CLEAN_SENTENCES_FULL_CSV))
 def test_should_allow_sentence_without_negative_sentiment(sentence, filter):
     context = Context(sentence)
     result = filter.run_filter(context)

@@ -6,19 +6,7 @@ from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.filter_manager.context import Context
 from llm_sf.utils.constants import Constants
 
-def load_conf_and_sensitive_data():
-    with open(Constants.CONFIDENTIAL_AND_SENSITIVE_CSV, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader, None)
-        return [row[0] for row in reader]
-
-def load_clean_data():
-    with open(Constants.CLEAN_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader, None)
-        return [row[0] for row in reader if len(row) == 1]
-
-@pytest.mark.parametrize("sentence", load_conf_and_sensitive_data())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.CONFIDENTIAL_AND_SENSITIVE_CSV))
 def test_should_block_when_sensitive_data_detected(sentence):
     context = Context(sentence)
     filter_obj = SensitiveDataFilter()
@@ -27,7 +15,7 @@ def test_should_block_when_sensitive_data_detected(sentence):
     assert isinstance(result, FilterResult)
     assert result.verdict == Constants.BLOCKED
 
-@pytest.mark.parametrize("sentence", load_clean_data())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.CLEAN_SENTENCES_FULL_CSV))
 def test_should_allow_when_no_sensitive_data_detected(sentence):
     context = Context(sentence)
     filter_obj = SensitiveDataFilter()

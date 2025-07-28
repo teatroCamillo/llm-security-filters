@@ -8,13 +8,13 @@ from llm_sf.utils.constants import Constants
 def filter():
     return BypassDetectionFilter()
 
-@pytest.mark.parametrize("sentence", Constants.load_clean_sentences())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.CLEAN_SENTENCES_FULL_CSV))
 def test_should_allow_clean_sentence(sentence, filter):
     context = Context(sentence)
     result = filter.run_filter(context)
     assert result.verdict == Constants.ALLOWED
 
-@pytest.mark.parametrize("prompt", Constants.load_jailbreak_prompts())
+@pytest.mark.parametrize("prompt", Constants.load_csv(Constants.JAILBREAK_PROMPTS_CSV))
 def test_should_block_due_to_jailbreak_patterns(prompt, filter):
     context = Context(prompt)
     result = filter.run_filter(context)

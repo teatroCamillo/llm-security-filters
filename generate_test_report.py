@@ -4,7 +4,7 @@ import sys
 import os
 
 # Get the target path from CLI or use default
-target = sys.argv[1] if len(sys.argv) > 1 else "tests\\unit\\test_profanity_filter.py"
+target = sys.argv[1] if len(sys.argv) > 1 else "tests\\unit"
 normalized = target.replace("\\", "/")
 
 # Determine base name for report (func > file > dir)

@@ -23,10 +23,10 @@ class SentimentFilter(BaseFilter):
         self.threshold = threshold
         self.analyzer = SentimentIntensityAnalyzer()
         
-        for word in Constants.load_profanity_words():
+        for word in Constants.load_csv(Constants.PROFANITIES_FULL_CSV):
             self._update_lexicon(word, -4.0)
         
-        for word in Constants.load_high_risk_words():
+        for word in Constants.load_csv(Constants.HIGH_RISK_WORDS_CSV):
             self._update_lexicon(word, -4.0)
 
     def run_filter(self, context) -> FilterResult:

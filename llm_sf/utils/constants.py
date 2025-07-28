@@ -39,105 +39,13 @@ class Constants:
     OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 
     @staticmethod
-    def load_profanity_words():
+    def load_csv(source):
         try:
-            # MUTATED_WORDS_CSV also with row[1] - large set, problems with performance 
-            with open(Constants.PROFANITIES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
+            with open(source, newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
                 next(reader, None)
                 return [row[0].strip() for row in reader if row]
         except Exception as e:
-            print(f"Warning: Failed to load profanity words from CSV: {e}")
+            print(f"Warning: Failed to load data from CSV: {e}")
             return []
-
-    @staticmethod
-    def load_profanity_sentences():
-        try:
-            with open(Constants.PROFANITY_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0] for row in reader if len(row) >= 1]
-        except Exception as e:
-            print(f"Warning: Failed to load profanity sentences: {e}")
-            return []
-    
-    @staticmethod
-    def load_clean_sentences():
-        try:
-            with open(Constants.CLEAN_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0] for row in reader if len(row) >= 1]
-        except Exception as e:
-            print(f"Warning: Failed to load clean sentences: {e}")
-            return []
-
-    @staticmethod
-    def load_disablings():
-        try:
-            with open(Constants.DISABLINGS_SENTENCES_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0] for row in reader if len(row) >= 1]
-        except Exception as e:
-            print(f"Warning: Failed to load disabling sentences: {e}")
-            return []
-
-    @staticmethod
-    def load_conf_and_sensitive_data():
-        try:
-            with open(Constants.CONFIDENTIAL_AND_SENSITIVE_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0] for row in reader if row]
-        except Exception as e:
-            print(f"Warning: Failed to load confidential and sensitive data: {e}")
-            return []
-
-    @staticmethod
-    def load_sentiment_sentences():
-        try:
-            with open(Constants.SENTIMENT_SENTENCES_FULL_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0] for row in reader if len(row) >= 1]
-        except Exception as e:
-            print(f"Warning: Failed to load sentiment sentences: {e}")
-            return []
-
-    @staticmethod
-    def load_jailbreak_prompts():
-        try:
-            #JAILBREAK_PROMPTS_FULL_CSV or JAILBREAK_PROMPTS_CSV
-            with open(Constants.JAILBREAK_PROMPTS_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0].strip() for row in reader if row]
-        except Exception as e:
-            print(f"Warning: Failed to load jailbreak prompts from CSV: {e}")
-            return []
-
-    @staticmethod
-    def load_jailbreak_patterns():
-        patterns = []
-        try:
-            with open(Constants.JAILBREAK_PATTERNS_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                for row in reader:
-                    patterns.append(row[0].strip())
-                return patterns
-        except Exception as e:
-            print(f"Warning: Failed to load jailbreak patterns from CSV: {e}")
-            return []
-
-    @staticmethod
-    def load_high_risk_words():
-        try:
-            with open(Constants.HIGH_RISK_WORDS_CSV, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader, None)
-                return [row[0].strip() for row in reader if row]
-        except Exception as e:
-            print(f"Warning: Failed to load high risk words from CSV: {e}")
-            return []
+            

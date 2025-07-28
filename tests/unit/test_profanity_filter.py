@@ -4,14 +4,14 @@ from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filter_manager.context import Context
 from llm_sf.utils.constants import Constants
 
-@pytest.mark.parametrize("sentence", Constants.load_profanity_sentences())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.PROFANITY_SENTENCES_FULL_CSV))
 def test_should_block_sentence_with_profanity(sentence):
     context = Context(sentence)
     pf = ProfanityFilter()
     result = pf.run_filter(context)
     assert result.verdict == Constants.BLOCKED
 
-@pytest.mark.parametrize("sentence", Constants.load_clean_sentences())
+@pytest.mark.parametrize("sentence", Constants.load_csv(Constants.CLEAN_SENTENCES_FULL_CSV))
 def test_should_allow_sentence_without_profanity(sentence):
     context = Context(sentence)
     pf = ProfanityFilter()
