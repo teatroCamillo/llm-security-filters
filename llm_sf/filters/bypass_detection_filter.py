@@ -62,15 +62,6 @@ class BypassDetectionFilter(BaseFilter):
             return {"matched": True, "reason": "Repeated token attack", "weight": 0.4}
         return {"matched": False}
 
-    # def _detect_high_entropy(self, text, threshold=4.0):
-    #     if not text or len(text) < 20:
-    #         return {"matched": False}
-    #     probs = [float(text.count(c)) / len(text) for c in set(text)]
-    #     entropy = -sum(p * math.log2(p) for p in probs)
-    #     if entropy > threshold:
-    #         return {"matched": True, "reason": f"High entropy content (entropy={entropy:.2f})", "weight": 0.5}
-    #     return {"matched": False}
-
     def _detect_high_entropy(self, text, thresholds=(4.8, 4.4, 4.0)):
         if not text or len(text) < 5:
             return {"matched": False}  # skip very short texts

@@ -45,9 +45,6 @@ class DecisionMaker:
             aggregate_score = 1 / (1 + math.exp(-weighted_sum))
             aggregate_score = round(aggregate_score, 2)
 
-            print("weighted_sum:", weighted_sum)
-            print("aggregate_score:", aggregate_score)
-
             if aggregate_score >= self.threshold:
                 return FilterResult(
                     verdict=Constants.BLOCKED,
