@@ -36,5 +36,3 @@ class FilterOrchestrator:
 
     def _run_filter(self, filtr: BaseFilter, context: Context) -> FilterResult:
         return filtr.run_filter(context)
-
-

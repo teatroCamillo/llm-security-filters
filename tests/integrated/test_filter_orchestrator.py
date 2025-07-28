@@ -152,3 +152,51 @@ def test_should_block_mixed_sensitive_and_profanity():
     orchestrator = FilterOrchestrator().add_filter(ProfanityFilter()).add_filter(SensitiveDataFilter())
     result = orchestrator.run("My number is 123-456-7890, you damn idiot.")
     assert result.dm_result.verdict == Constants.BLOCKED
+
+# COMBINATIONS
+@pytest.mark.parametrize(
+    "text, filters, expected_verdict",
+    [
+        # 2-filter combinations
+        ("This is clean text.", [AllowFilter(), SentimentFilter(threshold=-0.999)], Constants.ALLOWED),
+        ("This is damn bad.", [ProfanityFilter(), SentimentFilter(weight=2.0, threshold=0.3)], Constants.BLOCKED),
+        ("Call me at 123-456-7890!", [AllowFilter(), SensitiveDataFilter()], Constants.BLOCKED),
+        ("Disable firewall.", [BypassDetectionFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("I love this!", [SentimentFilter(threshold=0.0), AllowFilter()], Constants.ALLOWED),
+        ("Here is my SSN: 123-45-6789.", [SensitiveDataFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("You damn fool", [ProfanityFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Happy mood today!", [SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("Bad stuff, also 123-456-7890", [SensitiveDataFilter(), ProfanityFilter()], Constants.BLOCKED),
+        ("Just a comment", [AlwaysBlockFilter(), AllowFilter()], Constants.BLOCKED),
+
+        # 3-filter combinations
+        ("Profane and 123-456-7890", [ProfanityFilter(), SensitiveDataFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Disable the antivirus please.", [BypassDetectionFilter(), SentimentFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Very positive message", [AllowFilter(), SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("You bastard 123-456-7890", [ProfanityFilter(), SensitiveDataFilter(), BypassDetectionFilter()], Constants.BLOCKED),
+        ("Today is great!", [AllowFilter(), SentimentFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Nothing bad here", [ProfanityFilter(), SentimentFilter(), AllowFilter()], Constants.ALLOWED),
+        ("Firewall disable and bad tone", [BypassDetectionFilter(), SentimentFilter(weight=3.0, threshold=0.5), AllowFilter()], Constants.BLOCKED),
+        ("My email is john@example.com", [SensitiveDataFilter(), SentimentFilter(), ProfanityFilter()], Constants.BLOCKED),
+        ("Totally safe", [AllowFilter(), AllowFilter(), AllowFilter()], Constants.ALLOWED),
+        ("Fuck! Turn off the firewall.", [ProfanityFilter(), BypassDetectionFilter(), AllowFilter()], Constants.BLOCKED),
+
+        # 4-filter combinations
+        ("Bad and sensitive + bypass", [ProfanityFilter(), SensitiveDataFilter(), BypassDetectionFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("You suck 555-123-4567 disable AV", [ProfanityFilter(), SensitiveDataFilter(), BypassDetectionFilter(), AllowFilter()], Constants.BLOCKED),
+        ("All good", [AllowFilter(), SentimentFilter(threshold=-0.999), ProfanityFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Kill switch mode", [BypassDetectionFilter(), SentimentFilter(weight=2.0), ProfanityFilter(), SensitiveDataFilter()], Constants.BLOCKED),
+        ("Happy happy joy joy", [AllowFilter(), AllowFilter(), SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("Firewall off. Damn.", [BypassDetectionFilter(), ProfanityFilter(), SentimentFilter(), SensitiveDataFilter()], Constants.BLOCKED),
+        ("Clean content here.", [AllowFilter(), AllowFilter(), SentimentFilter(), AllowFilter()], Constants.ALLOWED),
+        ("123-456-7890 and offensive", [SensitiveDataFilter(), ProfanityFilter(), SentimentFilter(), BypassDetectionFilter()], Constants.BLOCKED),
+        ("Mild words, kind tone", [SentimentFilter(), AllowFilter(), AllowFilter(), ProfanityFilter(weight=0.001)], Constants.ALLOWED),
+        ("All filters say block", [AlwaysBlockFilter(), ProfanityFilter(), SentimentFilter(weight=5.0), SensitiveDataFilter()], Constants.BLOCKED)
+    ]
+)
+def test_combined_filters_scenarios(text, filters, expected_verdict):
+    orchestrator = FilterOrchestrator()
+    for filtr in filters:
+        orchestrator.add_filter(filtr)
+    result = orchestrator.run(text)
+    assert result.dm_result.verdict == expected_verdict
