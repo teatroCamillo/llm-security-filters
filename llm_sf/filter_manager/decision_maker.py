@@ -45,10 +45,10 @@ class DecisionMaker:
             aggregate_score = 1 / (1 + math.exp(-weighted_sum))
             aggregate_score = round(aggregate_score, 2)
 
-            if aggregate_score >= self.threshold:
+            if aggregate_score > self.threshold:
                 return FilterResult(
                     verdict=Constants.BLOCKED,
-                    reason=f"Threshold exceeded: {aggregate_score:.2f} >= {self.threshold}",
+                    reason=f"Threshold exceeded: {aggregate_score:.2f} > {self.threshold}",
                     metadata={"original_text": original_text, "aggregate_score": aggregate_score}
                 )
             else:
