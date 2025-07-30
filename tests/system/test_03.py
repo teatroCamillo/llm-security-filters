@@ -1,46 +1,34 @@
 # test_03.py - system: s:q:t/sL-
-# 
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
-from llm_sf.filter_manager.decision_maker import DecisionMaker
-from llm_sf.filters.sentiment_filter import SentimentFilter
+from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.utils.constants import Constants
 
 if __name__ == "__main__":
 
     ts = TestSystem()
-
-    dm = DecisionMaker(mode="threshold")
-    inbound_orch = FilterOrchestrator(dm)
-    inbound_orch.add_filter(SentimentFilter())
+    orchestrator = FilterOrchestrator()
+    orchestrator.add_filter(ProfanityFilter())
 
     test_cases = []
-
-    for i, s in enumerate(Constants.load_clean_sentences()):
+    prompts = ts.load_qa_from_csv(Constants.ST_CLEAN_SENTENCES_CSV)
+    for i in range(0, len(prompts), 4):
         temp = SystemTestCase(
-            prompts=[s],
-            expected_in=Constants.ALLOWED,
-            expected_out=None,
-            name=f"A_{i}"
+            in_prompts=prompts[i],
+            out_prompts=prompts[i+2],
+            expected_ins=prompts[i+1],
+            expected_outs=prompts[i+3],
+            name=f"CleanQA_{i}"
         )
         test_cases.append(temp)
 
-
-    for i, s in enumerate(Constants.load_profanity_sentences()):
-        temp = SystemTestCase(
-            prompts=[s],
-            expected_in=Constants.BLOCKED,
-            expected_out=None,
-            name=f"B_{i}"
-        )
-        test_cases.append(temp)
-
+    #print(test_cases)
 
     for test in test_cases:
-        ts.run(test, inbound_orch, None)
+        ts.run(test, orchestrator, orchestrator, is_llm=False)
         ts.print_test_summary(test)
 
     ts.compute_overall_metrics(test_cases)

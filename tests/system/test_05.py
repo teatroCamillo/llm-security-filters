@@ -1,4 +1,4 @@
-# test_00.py - system: p:q:ab/pL-
+# test_02.py - system: d:a:-Lt(0.55)/d
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
@@ -24,6 +24,8 @@ if __name__ == "__main__":
             name=f"CleanQA_{i}"
         )
         test_cases.append(temp)
+
+    #print(test_cases)
 
     for test in test_cases:
         ts.run(test, orchestrator, orchestrator, is_llm=False)

@@ -1,49 +1,35 @@
-# test_02.py - system: d:a:-Lt(0.55)/d
+# test_02.py - system: cl:qa:t/psMt/ps
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
 from llm_sf.filter_manager.decision_maker import DecisionMaker
-from llm_sf.filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
+from llm_sf.filters.profanity_filter import ProfanityFilter
+from llm_sf.filters.sensitive_data_filter import SensitiveDataFilter
 from llm_sf.utils.constants import Constants
 
 if __name__ == "__main__":
 
     ts = TestSystem()
-
-    dm = DecisionMaker(mode="threshold", threshold=0.55)
-    outbound_orch = FilterOrchestrator(dm)
-    outbound_orch.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    orchestrator.add_filter(ProfanityFilter())
+    orchestrator.add_filter(SensitiveDataFilter())
 
     test_cases = []
-
-    for i, s in enumerate(Constants.load_disablings()):
+    prompts = ts.load_qa_from_csv(Constants.ST_CLEAN_SENTENCES_CSV)
+    for i in range(0, len(prompts), 4):
         temp = SystemTestCase(
-            prompts=[s],
-            expected_in=None,
-            expected_out=Constants.BLOCKED,
-            name=f"Disabling_{i}"
+            in_prompts=prompts[i],
+            out_prompts=prompts[i+2],
+            expected_ins=prompts[i+1],
+            expected_outs=prompts[i+3],
+            name=f"CleanQA_{i}"
         )
         test_cases.append(temp)
 
-    b = SystemTestCase(
-       prompts=["What is the capital of France?"],
-        expected_in=None,
-        expected_out=Constants.ALLOWED,
-        name="Benign_0"
-    )
-    test_cases.append(b)
-
-    c = SystemTestCase(
-       prompts=["What is the capital of UK?"],
-        expected_in=None,
-        expected_out=Constants.ALLOWED,
-        name="Benign_1"
-    )
-    test_cases.append(c)
     for test in test_cases:
-        ts.run(test, None, outbound_orch)
+        ts.run(test, orchestrator, orchestrator, is_llm=False)
         ts.print_test_summary(test)
 
     ts.compute_overall_metrics(test_cases)
