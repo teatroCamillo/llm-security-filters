@@ -246,3 +246,41 @@ class TestSystem:
                 continue
 
         return qa_list
+
+
+    def load_qa_for_system_tests_csv(self, filepath):
+        qa_list = []
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        for line in lines[1:]:  # Skip header
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                # Split CSV line safely assuming fields are enclosed in double quotes
+                parts = [part.strip().strip('"').replace('""', '"') for part in line.split('","')]
+                if len(parts) != 5:
+                    print(f"Skipping malformed line (expected 5 columns): {line}")
+                    continue
+
+                questions = [q.strip() for q in parts[0].split("::")]
+                q_statuses = [s.strip() for s in parts[1].split("::")]
+                answers = [a.strip() for a in parts[2].split("::")]
+                a_statuses = [s.strip() for s in parts[3].split("::")]
+                category = [parts[4]]  # Do not split
+
+                if not (len(questions) == len(q_statuses) == len(answers) == len(a_statuses)):
+                    print(f"Skipping inconsistent line (mismatched counts): {line}")
+                    continue
+
+                qa_list.extend([questions, q_statuses, answers, a_statuses, category])
+                # for q, qs, a, as_ in zip(questions, q_statuses, answers, a_statuses):
+                #     qa_list.append([q, qs, a, as_, category])
+
+            except Exception as e:
+                print(f"Error parsing line: {e}")
+                continue
+
+        return qa_list

@@ -49,6 +49,7 @@ class SentimentFilter(BaseFilter):
         else:
             return FilterResult(
                 verdict=Constants.ALLOWED,
+                reason=f"No negative sentiment detected: {scores['compound']} above threshold {self.threshold}",
                 metadata = {
                     "original_text": context.original_text,
                     "sentiment_scores": scores,

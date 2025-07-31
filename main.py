@@ -6,8 +6,8 @@ from llm_sf.filter_manager.decision_maker import DecisionMaker
 from llm_sf.filter_manager.filter_results_aggregator import FilterResultsAggregator
 from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filters.sentiment_filter import SentimentFilter
-from llm_sf.filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
-from llm_sf.filters.confidential_and_sensitive_data_filter import ConfidentialAndSensitiveDataFilter
+from llm_sf.filters.bypass_detection_filter import BypassDetectionFilter
+from llm_sf.filters.sensitive_data_filter import SensitiveDataFilter
 from llm_sf.utils.constants import Constants
 
 def main():
@@ -19,9 +19,9 @@ def main():
     dm = DecisionMaker("threshold")
     orchestrator = FilterOrchestrator(dm)
     orchestrator.add_filter(ProfanityFilter())
-    #orchestrator.add_filter(SentimentFilter())
-    #orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
-    #orchestrator.add_filter(ConfidentialAndSensitiveDataFilter())
+    # orchestrator.add_filter(SentimentFilter())
+    # orchestrator.add_filter(BypassDetectionFilter())
+    # orchestrator.add_filter(SensitiveDataFilter())
 
     print("Simple console chat with llama3.2 (example). Type Ctrl+C or an empty line to exit.\n")
 
@@ -61,10 +61,10 @@ def main():
 
             result = response.json()
             llm_output = result.get("message", {}).get("content", "")
-            print("TESTED llm out: ", llm_output)
+            
             # ---- 3) Outbound Filtering on LLM Response ----
             outbound_agg = orchestrator.run(llm_output)
-            print("TESTED llm outbound_agg: ", outbound_agg)
+            
             if outbound_agg.dm_result.verdict == Constants.BLOCKED:
                 print(f"[SYSTEM] LLM response blocked by filters: {outbound_agg.dm_result.reason}")
                 continue

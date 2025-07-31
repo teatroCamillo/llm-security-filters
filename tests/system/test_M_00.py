@@ -1,4 +1,4 @@
-# system: pcbs:qa:t/p(w=1.8)cbs:M:t(0.5)/pc(w=2.0)bs(t=-0.3)
+# system: pcbs:qa:t(0.7)/p(w=1.8)cbs:M:t(0.7)/pc(w=1.1)bs(t=-0.3)
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
@@ -27,16 +27,30 @@ if __name__ == "__main__":
     out_orchestrator.add_filter(SentimentFilter(threshold=-0.3))
 
     test_cases = []
-    prompts = ts.load_qa_from_csv(Constants.ST_CLEAN_SENTENCES_CSV)
-    for i in range(0, len(prompts), 4):
+    # prompts = ts.load_qa_from_csv(Constants.ST_CLEAN_SENTENCES_CSV)
+    # print(prompts)
+    # for i in range(0, len(prompts), 4):
+    #     temp = SystemTestCase(
+    #         in_prompts=prompts[i],
+    #         out_prompts=prompts[i+2],
+    #         expected_ins=prompts[i+1],
+    #         expected_outs=prompts[i+3],
+    #         name=f"CleanQA_{i}"
+    #     )
+    #     test_cases.append(temp)
+
+    prompts = ts.load_qa_for_system_tests_csv(Constants.ST_MIX_SENTENCES_CSV)
+    #print(prompts)
+    for i in range(0, len(prompts), 5):
         temp = SystemTestCase(
             in_prompts=prompts[i],
             out_prompts=prompts[i+2],
             expected_ins=prompts[i+1],
             expected_outs=prompts[i+3],
-            name=f"CleanQA_{i}"
+            name=f"MixQA_{i}"
         )
         test_cases.append(temp)
+
 
     for test in test_cases:
         ts.run(test, in_orchestrator, out_orchestrator, is_llm=False)

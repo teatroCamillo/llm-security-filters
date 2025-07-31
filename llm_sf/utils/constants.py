@@ -34,6 +34,9 @@ class Constants:
 
     ST_CLEAN_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "st_clean_sentences.csv"
     
+    ST_MIX_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "st_mix_setences.csv"
+    
+
     # state
     ALLOWED = "allowed"
     BLOCKED = "blocked"
