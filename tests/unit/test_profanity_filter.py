@@ -4,6 +4,24 @@ from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filter_manager.context import Context
 from llm_sf.utils.constants import Constants
 
+def test_should_initialize_with_default_weight():
+    filter_instance = ProfanityFilter()
+    assert filter_instance.weight == 1.0
+
+def test_should_initialize_with_valid_weight():
+    filter_instance = ProfanityFilter(weight=7.3)
+    assert filter_instance.weight == 7.3
+
+@pytest.mark.parametrize("invalid_weight", [-0.01, -10, 10.01, 100])
+def test_should_raise_error_for_weight_out_of_bounds(invalid_weight):
+    with pytest.raises(ValueError, match="Weight must be between 0.0 and 10.0"):
+        ProfanityFilter(weight=invalid_weight)
+
+@pytest.mark.parametrize("boundary_weight", [0.0, 10.0])
+def test_should_allow_weight_at_boundary_values(boundary_weight):
+    filter_instance = ProfanityFilter(weight=boundary_weight)
+    assert filter_instance.weight == boundary_weight
+
 @pytest.mark.parametrize("sentence", Constants.load_csv(Constants.PROFANITY_SENTENCES_FULL_CSV))
 def test_should_block_sentence_with_profanity(sentence):
     context = Context(sentence)

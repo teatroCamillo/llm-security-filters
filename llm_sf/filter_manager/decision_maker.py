@@ -6,7 +6,7 @@ from llm_sf.utils.constants import Constants
 
 class DecisionMaker:
 
-    def __init__(self, mode: str = "allow-block", threshold: float = 0.6):
+    def __init__(self, mode: str = "allow-block", threshold: float = 0.25):
         """
         modes:
         - threshold - range 0-1, as higher then worese
@@ -34,16 +34,21 @@ class DecisionMaker:
             )
 
         elif self.mode == "threshold":
-            weighted_sum = 0.0
+            total_weighted_score = 0.0
+            total_weight = 0.0
 
             for r in results:
                 score = float(r.metadata.get("risk_score", 0.0))
                 weight = float(r.metadata.get("weight", 1.0))
-                weighted_sum += score * weight
+                total_weighted_score += score * weight
+                total_weight += weight
 
-            # Normalize using sigmoid to always stay in (0,1)
-            aggregate_score = 1 / (1 + math.exp(-weighted_sum))
-            aggregate_score = round(aggregate_score, 2)
+            if total_weight > 0:
+                aggregate_score = total_weighted_score / total_weight
+            else:
+                aggregate_score = 0.0
+
+            aggregate_score = max(0.0, min(1.0, round(aggregate_score, 2)))
 
             if aggregate_score > self.threshold:
                 return FilterResult(

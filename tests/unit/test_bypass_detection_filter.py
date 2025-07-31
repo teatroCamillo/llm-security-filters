@@ -4,6 +4,24 @@ from llm_sf.filters.bypass_detection_filter import BypassDetectionFilter
 from llm_sf.filter_manager.context import Context
 from llm_sf.utils.constants import Constants
 
+def test_should_initialize_with_default_weight():
+    filter_instance = BypassDetectionFilter()
+    assert filter_instance.weight == 1.0
+
+def test_should_initialize_with_valid_weight():
+    filter_instance = BypassDetectionFilter(weight=7.3)
+    assert filter_instance.weight == 7.3
+
+@pytest.mark.parametrize("invalid_weight", [-0.01, -10, 10.01, 100])
+def test_should_raise_error_for_weight_out_of_bounds(invalid_weight):
+    with pytest.raises(ValueError, match="Weight must be between 0.0 and 10.0"):
+        BypassDetectionFilter(weight=invalid_weight)
+
+@pytest.mark.parametrize("boundary_weight", [0.0, 10.0])
+def test_should_allow_weight_at_boundary_values(boundary_weight):
+    filter_instance = BypassDetectionFilter(weight=boundary_weight)
+    assert filter_instance.weight == boundary_weight
+
 @pytest.fixture
 def filter():
     return BypassDetectionFilter()

@@ -23,11 +23,11 @@ class TestSystem:
                     test_case.outbound_dm_output.append(None)
                     test_case.outbound_filters_outputs.append(None)
 
-                    inbound_verdict = inbound_dm_output.verdict
-                    outbound_verdict = None
-
                     expected_in = test_case.expected_ins[j] if test_case.expected_ins else None
+                    inbound_verdict = inbound_dm_output.verdict
+                                  
                     expected_out = test_case.expected_outs[j] if test_case.expected_outs else None
+                    outbound_verdict = expected_out  
 
                     partial_pass = (
                         expected_in == inbound_verdict and
