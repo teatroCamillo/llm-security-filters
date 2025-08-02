@@ -1,4 +1,4 @@
-# system: pcbs:qa:t(0.7)/p(w=1.8)cbs:M:t(0.7)/pc(w=1.1)bs(t=-0.3)
+# system: pcbs:qa:t(t=0.28)/p(w=1.8)cb(w=4.0)s:M:t/pc(w=1.1)b(w=4.0)s(t=-0.3)
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
@@ -14,7 +14,7 @@ from llm_sf.utils.constants import Constants
 if __name__ == "__main__":
 
     ts = TestSystem()
-    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold", threshold=0.28))
     in_orchestrator.add_filter(ProfanityFilter(weight=1.8))
     in_orchestrator.add_filter(SensitiveDataFilter())
     in_orchestrator.add_filter(BypassDetectionFilter(weight=4.0))
@@ -62,7 +62,6 @@ if __name__ == "__main__":
             name=f"MixQA_{i}"
         )
         test_cases.append(temp)
-
 
     for test in test_cases:
         ts.run(test, in_orchestrator, out_orchestrator, is_llm=False)

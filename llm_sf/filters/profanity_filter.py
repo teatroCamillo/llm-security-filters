@@ -55,5 +55,4 @@ class ProfanityFilter(BaseFilter):
         )
 
         total_words = len(original_words)
-        result = round(min(num_censored_words / total_words, 1.0), 1)
-        return result
+        return round(min(num_censored_words / total_words, 1.0), 1)

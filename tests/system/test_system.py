@@ -101,11 +101,11 @@ class TestSystem:
         for i in range(num_tests):
             print(f"\n--- Test Case #{i + 1} ---")
 
-            # Prompt Input
+            # prompt input
             input_prompt = test_case.in_prompts[i]
             print(f"Input prompt             : {input_prompt}")
 
-            # Inbound Filtering
+            # inbound filtering
             expected_in = test_case.expected_ins[i] if test_case.expected_ins else None
             inbound_output = test_case.inbound_dm_outputs[i] if i < len(test_case.inbound_dm_outputs) else None
             inbound_filters = test_case.inbound_filters_outputs[i] if i < len(test_case.inbound_filters_outputs) else None
@@ -115,12 +115,12 @@ class TestSystem:
             print(f"  Actual DM verdict      : {inbound_output if inbound_output else None}")
             print(f"  All filter results     : {inbound_filters}")
 
-            # LLM Output
+            # LLM output
             llm_output = test_case.llm_outputs[i] if i < len(test_case.llm_outputs) else None
             print("\n[LLM output]")
             print(f"  LLM output             : {llm_output}")
 
-            # Outbound Filtering
+            # outbound filtering
             expected_out = test_case.expected_outs[i] if test_case.expected_outs else None
             outbound_output = test_case.outbound_dm_output[i] if i < len(test_case.outbound_dm_output) else None
             outbound_filters = test_case.outbound_filters_outputs[i] if i < len(test_case.outbound_filters_outputs) else None
@@ -130,16 +130,15 @@ class TestSystem:
             print(f"  Actual DM verdict      : {outbound_output if outbound_output else None}")
             print(f"  All filter results     : {outbound_filters}")
 
-            # Evaluation
+            # evaluation
             passed = test_case.is_passed_partials[i] if i < len(test_case.is_passed_partials) else None
             print("\n[Evaluation]")
             print(f"  Test passed?           : {'✅ Passed' if passed else '❌ Failed'}")
 
-        # Final result
+        # final result
         print(f"\n==== Overall Result: {'✅ ALL PASSED' if test_case.is_passed else '❌ SOME FAILED'} ====\n")
 
     def compute_overall_metrics(self, test_cases):
-        from llm_sf.utils.constants import Constants
 
         tp = tn = fp = fn = 0
         in_total = in_none = 0
@@ -149,7 +148,7 @@ class TestSystem:
         for test in test_cases:
             num_cases = len(test.in_prompts)
             for i in range(num_cases):
-                # === Inbound Check ===
+                # inbound check
                 expected_in = test.expected_ins[i] if test.expected_ins else None
                 inbound_dm = test.inbound_dm_outputs[i] if i < len(test.inbound_dm_outputs) else None
                 actual_in = inbound_dm.verdict if inbound_dm else None
@@ -170,7 +169,7 @@ class TestSystem:
                 else:
                     in_none += 1
 
-                # === Outbound Check ===
+                # outbound check
                 expected_out = test.expected_outs[i] if test.expected_outs else None
                 outbound_dm = test.outbound_dm_output[i] if i < len(test.outbound_dm_output) else None
                 actual_out = outbound_dm.verdict if outbound_dm else None
@@ -191,13 +190,20 @@ class TestSystem:
                 else:
                     out_none += 1
 
-        total = in_total + out_total
-        accuracy = (tp + tn) / total if total > 0 else 0
+        total = in_total + in_none + out_total + out_none
+        total_in_use = in_total + out_total
+        total_no_in_use = in_none + out_none
+
+        accuracy = (tp + tn) / total_in_use if total_in_use > 0 else 0
         fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
         asr = fp / blocked_total if blocked_total > 0 else 0
 
         print("\n======= Overall Metrics =======")
         print(f"Total Samples         : {total}")
+        print(f"--------------------------------")
+        print(f" - Total used         : {total_in_use}")
+        print(f" - Total unused       : {total_no_in_use}")
+        print(f"--------------------------------")
         print(f" - Inbound Populated  : {in_total}")
         print(f" - Inbound None       : {in_none}")
         print(f" - Outbound Populated : {out_total}")
