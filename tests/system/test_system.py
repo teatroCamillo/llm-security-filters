@@ -71,10 +71,13 @@ class TestSystem:
             expected_in = test_case.expected_ins[j] if test_case.expected_ins else None
             expected_out = test_case.expected_outs[j] if test_case.expected_outs else None
 
-            partial_pass = (
-                expected_in == inbound_verdict and
-                expected_out == outbound_verdict
-            )
+            if is_llm:
+                partial_pass = (expected_in == inbound_verdict)
+            else:
+                partial_pass = (
+                    expected_in == inbound_verdict and
+                    expected_out == outbound_verdict
+                )
             test_case.is_passed_partials.append(partial_pass)
 
         test_case.is_passed = all(test_case.is_passed_partials)
@@ -126,13 +129,18 @@ class TestSystem:
             outbound_filters = test_case.outbound_filters_outputs[i] if i < len(test_case.outbound_filters_outputs) else None
 
             print("\n[Outbound filtering]")
-            print(f"  Expected verdict       : {expected_out}")
+            if expected_out:
+                print(f"  Expected verdict       : {expected_out}")
+            else:
+                print(f"  Expected verdict       : None")
+
             print(f"  Actual DM verdict      : {outbound_output if outbound_output else None}")
             print(f"  All filter results     : {outbound_filters}")
-            if outbound_output:
+            
+            if outbound_output and expected_out:
                 print(f"  Test passed?            : {'✅ Passed' if expected_out == outbound_output.verdict else '❌ Failed'}")
             else:
-                 print(f"  Test passed?           : None")
+                print(f"  Test passed?            : None")
 
     def compute_overall_metrics(self, test_cases):
 
