@@ -77,7 +77,6 @@ class TestSystem:
             )
             test_case.is_passed_partials.append(partial_pass)
 
-        # Overall result
         test_case.is_passed = all(test_case.is_passed_partials)
 
     def _call_llm(self, conversation):
@@ -114,6 +113,7 @@ class TestSystem:
             print(f"  Expected verdict       : {expected_in}")
             print(f"  Actual DM verdict      : {inbound_output if inbound_output else None}")
             print(f"  All filter results     : {inbound_filters}")
+            print(f"  Test passed?           : {'✅ Passed' if expected_in == inbound_output.verdict else '❌ Failed'}")
 
             # LLM output
             llm_output = test_case.llm_outputs[i] if i < len(test_case.llm_outputs) else None
@@ -129,24 +129,25 @@ class TestSystem:
             print(f"  Expected verdict       : {expected_out}")
             print(f"  Actual DM verdict      : {outbound_output if outbound_output else None}")
             print(f"  All filter results     : {outbound_filters}")
-
-            # evaluation
-            passed = test_case.is_passed_partials[i] if i < len(test_case.is_passed_partials) else None
-            print("\n[Evaluation]")
-            print(f"  Test passed?           : {'✅ Passed' if passed else '❌ Failed'}")
-
-        # final result
-        print(f"\n==== Overall Result: {'✅ ALL PASSED' if test_case.is_passed else '❌ SOME FAILED'} ====\n")
+            if outbound_output:
+                print(f"  Test passed?            : {'✅ Passed' if expected_out == outbound_output.verdict else '❌ Failed'}")
+            else:
+                 print(f"  Test passed?           : None")
 
     def compute_overall_metrics(self, test_cases):
 
+        total_samples = 0
         tp = tn = fp = fn = 0
         in_total = in_none = 0
         out_total = out_none = 0
         blocked_total = 0
 
         for test in test_cases:
-            num_cases = len(test.in_prompts)
+            num_cases = len(test.in_prompts) if test.in_prompts else 0
+            num_cases_out = len(test.out_prompts) if test.out_prompts else 0
+            total_samples += num_cases
+            total_samples += num_cases_out 
+
             for i in range(num_cases):
                 # inbound check
                 expected_in = test.expected_ins[i] if test.expected_ins else None
@@ -190,7 +191,6 @@ class TestSystem:
                 else:
                     out_none += 1
 
-        total = in_total + in_none + out_total + out_none
         total_in_use = in_total + out_total
         total_no_in_use = in_none + out_none
 
@@ -199,10 +199,10 @@ class TestSystem:
         asr = fp / blocked_total if blocked_total > 0 else 0
 
         print("\n======= Overall Metrics =======")
-        print(f"Total Samples         : {total}")
+        print(f"Total Samples         : {total_samples}")
         print(f"--------------------------------")
-        print(f" - Total used         : {total_in_use}")
-        print(f" - Total unused       : {total_no_in_use}")
+        print(f" - Total used         : {total_in_use} (in+out populated)")
+        print(f" - Total unused       : {total_no_in_use} (in+out none)")
         print(f"--------------------------------")
         print(f" - Inbound Populated  : {in_total}")
         print(f" - Inbound None       : {in_none}")
@@ -282,8 +282,6 @@ class TestSystem:
                     continue
 
                 qa_list.extend([questions, q_statuses, answers, a_statuses, category])
-                # for q, qs, a, as_ in zip(questions, q_statuses, answers, a_statuses):
-                #     qa_list.append([q, qs, a, as_, category])
 
             except Exception as e:
                 print(f"Error parsing line: {e}")
