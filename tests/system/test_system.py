@@ -1,5 +1,8 @@
 import requests
 import csv
+import io
+import os
+import sys
 from llm_sf.utils.constants import Constants
 from tests.system.system_test_case import SystemTestCase
 from llm_sf.filter_manager.filter_result import FilterResult
@@ -136,7 +139,7 @@ class TestSystem:
 
             print(f"  Actual DM verdict      : {outbound_output if outbound_output else None}")
             print(f"  All filter results     : {outbound_filters}")
-            
+
             if outbound_output and expected_out:
                 print(f"  Test passed?            : {'✅ Passed' if expected_out == outbound_output.verdict else '❌ Failed'}")
             else:
@@ -296,3 +299,39 @@ class TestSystem:
                 continue
 
         return qa_list
+
+    def generate_report(self, test_cases, overall_metrics_fn, output_path="system_test_report.md"):
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        lines = ["# 🧪 System Test Report\n"]
+
+        for test in test_cases:
+            lines.append(f"## 📋 Test Case: `{test.name}`\n")
+            for i, prompt in enumerate(test.in_prompts):
+                lines.append(f"### 🔹 Sub-Test #{i + 1}")
+                lines.append(f"- **Input Prompt**: `{prompt}`")
+                lines.append(f"- **Expected Inbound Verdict**: `{test.expected_ins[i] if test.expected_ins else 'N/A'}`")
+                lines.append(f"- **Actual Inbound Verdict**: `{test.inbound_dm_outputs[i].verdict if test.inbound_dm_outputs[i] else 'N/A'}`")
+                lines.append(f"- **Inbound Filter Results**: `{test.inbound_filters_outputs[i]}`")
+                lines.append(f"- **LLM Output**: `{test.llm_outputs[i]}`")
+                lines.append(f"- **Expected Outbound Verdict**: `{test.expected_outs[i] if test.expected_outs else 'N/A'}`")
+                lines.append(f"- **Actual Outbound Verdict**: `{test.outbound_dm_output[i].verdict if test.outbound_dm_output[i] else 'N/A'}`")
+                lines.append(f"- **Outbound Filter Results**: `{test.outbound_filters_outputs[i]}`")
+                lines.append(f"- ✅ **Partial Pass**: `{test.is_passed_partials[i]}`\n")
+
+            lines.append(f"**➡️ Overall Pass for `{test.name}`: `{test.is_passed}`**\n")
+            lines.append("---")
+
+        # Capture print output from compute_overall_metrics
+        metrics_output = io.StringIO()
+        sys_stdout_backup = sys.stdout
+        sys.stdout = metrics_output
+        overall_metrics_fn(test_cases)
+        sys.stdout = sys_stdout_backup
+
+        lines.append("## 📊 Overall Metrics Summary\n")
+        lines.append("```\n" + metrics_output.getvalue() + "\n```\n")
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+
+        print(f"✅ Report generated at: {os.path.abspath(output_path)}")

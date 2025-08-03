@@ -31,4 +31,5 @@ if __name__ == "__main__":
         ts.run(test, orchestrator, None, is_llm=False)
         ts.print_test_summary(test)
 
-    ts.compute_overall_metrics(test_cases)
+    #ts.compute_overall_metrics(test_cases)
+    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_M_02.md")
