@@ -49,6 +49,7 @@ class SentimentFilter(BaseFilter):
         else:
             return FilterResult(
                 verdict=Constants.ALLOWED,
+                reason=f"No negative sentiment detected: {scores['compound']} above threshold {self.threshold}",
                 metadata = {
                     "original_text": context.original_text,
                     "sentiment_scores": scores,
@@ -61,10 +62,8 @@ class SentimentFilter(BaseFilter):
         self.analyzer.lexicon[word] = score
 
     def add_whitespace_around_punctuation(self, text):
-        #pattern = f'([{re.escape("!?,.:;\"\'()[]{}<>")}]])'
         pattern = f'([{re.escape("!?,.:;")}])'
         return re.sub(pattern, r' \1 ', text)
     
     def compute_risk_score(self, score_compound) -> float:
-        risk_score = round((1 - score_compound) / 2, 2)
-        return risk_score
+        return round((1 - score_compound) / 2, 2)

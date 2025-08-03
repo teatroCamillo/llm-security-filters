@@ -1,35 +1,37 @@
-# test_01.py - system: p:q:t/dL-
+# system: p:q:t/b:M:-
 # See that the attack will pass if the wrong filter is set. An example of inappropriate use of a filter. DO NOT DO THAT.
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
 from tests.system.test_system import TestSystem
 from llm_sf.filter_manager.filter_orchestrator import FilterOrchestrator
-from llm_sf.filter_manager.decision_maker import DecisionMaker
-from llm_sf.filters.safeguard_against_disabling_security_features_filter import SafeguardAgainstDisablingSecurityFeaturesFilter
+from llm_sf.filters.bypass_detection_filter import BypassDetectionFilter
 from llm_sf.utils.constants import Constants
 
 if __name__ == "__main__":
 
     ts = TestSystem()
-
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm)
-    orchestrator.add_filter(SafeguardAgainstDisablingSecurityFeaturesFilter())
+    orchestrator = FilterOrchestrator()
+    orchestrator.add_filter(BypassDetectionFilter())
 
     test_cases = []
+    prompts = Constants.load_csv(Constants.PROFANITY_SENTENCES_FULL_CSV)
+    for i in range(len(prompts)):
+        all_in = [prompts[i]]
+        all_ex = [Constants.BLOCKED]
 
-    for i, s in enumerate(Constants.load_profanity_sentences()):
         temp = SystemTestCase(
-            prompts=[s],
-            expected_in=Constants.BLOCKED,
-            expected_out=None,
+            in_prompts=all_in,
+            out_prompts=None,
+            expected_ins=all_ex,
+            expected_outs=None,
             name=f"Profanity_{i}"
         )
         test_cases.append(temp)
 
     for test in test_cases:
-        ts.run(test, orchestrator, None)
+        ts.run(test, orchestrator, None, is_llm=False)
         ts.print_test_summary(test)
 
     ts.compute_overall_metrics(test_cases)
+    #ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_M_03.md")

@@ -31,8 +31,13 @@ class Constants:
     JAILBREAK_PATTERNS_CSV = RESOURCES_DIR / "jailbreak_patterns.csv"
 
     HIGH_RISK_WORDS_CSV = RESOURCES_DIR / "high_risk_words.csv"
+
+    ST_CLEAN_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "st_clean_sentences.csv"
     
-    # names
+    ST_MIX_SENTENCES_CSV = ROOT_DIR / "tests" / "resources" / "st_mix_setences.csv"
+    
+
+    # state
     ALLOWED = "allowed"
     BLOCKED = "blocked"
 
