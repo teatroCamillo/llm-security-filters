@@ -19,7 +19,6 @@ class BypassDetectionFilter(BaseFilter):
 
         results.append(self._detect_jailbreak_phrases(text))
         results.append(self._detect_repeated_tokens(text))
-        results.append(self._detect_high_entropy(text))
 
         findings = [r for r in results if r['matched']]
         risk_score = self.compute_risk_score(findings)
@@ -62,30 +61,6 @@ class BypassDetectionFilter(BaseFilter):
             return {"matched": True, "reason": "Repeated token attack", "weight": 0.4}
         return {"matched": False}
 
-    def _detect_high_entropy(self, text, thresholds=(4.8, 4.4, 4.0)):
-        if not text or len(text) < 5:
-            return {"matched": False}  # skip very short texts
-        
-        length = len(text)
-        if length < 40:
-            threshold = thresholds[0]
-        elif length < 100:
-            threshold = thresholds[1]
-        else:
-            threshold = thresholds[2]
-
-        # Entropy calculation
-        probs = [float(text.count(c)) / length for c in set(text)]
-        entropy = -sum(p * math.log2(p) for p in probs)
-
-        if entropy > threshold:
-            return {
-                "matched": True,
-                "reason": f"High entropy content (entropy={entropy:.2f}, threshold={threshold})",
-                "weight": 0.5
-            }
-        return {"matched": False}
-
     def compute_risk_score(self, findings: list) -> float:
         if not findings:
             return 0.0
@@ -93,6 +68,5 @@ class BypassDetectionFilter(BaseFilter):
         max_possible_weight = sum([
             0.8,  # Jailbreak
             0.4,  # Repeated tokens
-            0.5,  # High entropy
         ])
         return round(min(total_weight / max_possible_weight, 1.0), 2)

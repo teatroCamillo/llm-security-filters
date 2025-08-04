@@ -1,6 +1,5 @@
 # sensitive_data_filter.py
 import re
-from dataprofiler import Profiler, ProfilerOptions
 from dataprofiler.labelers.data_labelers import DataLabeler
 from llm_sf.filters.base_filter import BaseFilter
 from llm_sf.filter_manager.context import Context
