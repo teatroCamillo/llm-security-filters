@@ -113,12 +113,12 @@ class SensitiveDataFilter(BaseFilter):
             'ORDINAL': 0.0
         }
 
-        MAX_TOTAL_SEVERITY = 3.0  # Tune this based on how strict you want it to be
+        max_total_severity = len(entities) if len(entities) > 1 else 1.0
 
         total_severity = sum(
             SENSITIVITY_WEIGHTS.get(entity["label"], 0.1)
             for entity in entities
         )
 
-        risk_score = round(min(total_severity / MAX_TOTAL_SEVERITY, 1.0), 2)
+        risk_score = round(min(total_severity / max_total_severity, 1.0), 2)
         return risk_score

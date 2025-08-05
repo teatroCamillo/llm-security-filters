@@ -64,9 +64,12 @@ class BypassDetectionFilter(BaseFilter):
     def compute_risk_score(self, findings: list) -> float:
         if not findings:
             return 0.0
-        total_weight = sum(f.get("weight", 0.1) for f in findings)
-        max_possible_weight = sum([
-            0.8,  # Jailbreak
-            0.4,  # Repeated tokens
-        ])
-        return round(min(total_weight / max_possible_weight, 1.0), 2)
+
+        threshold = 0.2
+        capped_weight = 1.0
+
+        # Apply ReLU to each weight, subtracting threshold
+        relu_weights = [max(f.get("weight", 0.1) - threshold, 0) for f in findings]
+        total_risk = sum(relu_weights)
+        score = min(total_risk / capped_weight, 1.0)
+        return round(score, 2)

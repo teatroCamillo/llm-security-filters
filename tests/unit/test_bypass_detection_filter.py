@@ -56,11 +56,6 @@ def test_should_allow_short_random_string(filter):
     result = filter.run_filter(context)
     assert result.verdict == Constants.ALLOWED
 
-def test_should_calculate_correct_risk_score_single_trigger(filter):
-    findings = [{"matched": True, "reason": "Jailbreak", "weight": 0.8}]
-    risk = filter.compute_risk_score(findings)
-    assert risk == round(min(0.8 / 1.2, 1.0), 2)
-
 def test_should_allow_clean_text_edge_case(filter):
     context = Context("a b c d e f g h i j")
     result = filter.run_filter(context)
@@ -72,31 +67,37 @@ def test_should_block_text_with_multiple_triggers(filter):
     assert result.verdict == Constants.BLOCKED
     assert "repeated" in result.reason.lower()
 
-def test_compute_risk_score_empty_findings(filter):
-    assert filter.compute_risk_score([]) == 0.0
-
-def test_compute_risk_score_all_weighted_findings(filter):
-    findings = [
-        {"matched": True, "reason": "Jailbreak", "weight": 2.8},
-        {"matched": True, "reason": "Repeated token", "weight": 0.4}
-    ]
-    assert filter.compute_risk_score(findings) == 1.0
-
-def test_compute_risk_score_with_missing_weights(filter):
-    findings = [
-        {"matched": True, "reason": "Unknown reason"},  # defaults to 0.1
-    ]
-    assert filter.compute_risk_score(findings) == 0.08
-
-def test_compute_risk_score_with_excessive_weight(filter):
-    findings = [
-        {"matched": True, "reason": "Overload", "weight": 5.0}
-    ]
-    # 5.0 / 1.7 =~ 2.94 exceeds 1.0 -> should cap
-    assert filter.compute_risk_score(findings) == 1.0
-
-def test_compute_risk_score_rounding_precision(filter):
-    findings = [
-        {"matched": True, "reason": "Almost nothing", "weight": 0.231}
-    ]
-    assert filter.compute_risk_score(findings) == 0.19
+@pytest.mark.parametrize("findings,expected", [
+    ([], 0.0),
+    ([{"weight": 0.1}], 0.0),
+    ([{"weight": 0.2}], 0.0),
+    ([{"weight": 0.21}], 0.01),
+    ([{"weight": 0.3}], 0.1),
+    ([{"weight": 0.4}], 0.2),
+    ([{"weight": 0.6}], 0.4),
+    ([{"weight": 1.0}], 0.8),
+    ([{"weight": 2.0}], 1.0),
+    ([{"weight": -1.0}], 0.0),
+    ([{"weight": 0.1}, {"weight": 0.1}], 0.0),
+    ([{"weight": 0.1}, {"weight": 0.3}], 0.1),
+    ([{"weight": 0.2}, {"weight": 0.4}], 0.2),
+    ([{"weight": 0.5}, {"weight": 0.6}], 0.7),
+    ([{"weight": 0.9}, {"weight": 0.9}], 1.0),
+    ([{"weight": 0.25}] * 10, 0.5),
+    ([{"weight": 0.25}] * 20, 1.0),
+    ([{"weight": 0.5}, {"weight": -1.0}], 0.3),
+    ([{"weight": 0.1}, {}], 0.0),
+    ([{}, {"weight": 0.3}], 0.1),
+    ([{}, {}, {}], 0.0),
+    ([{"weight": 1.0}, {"weight": 1.0}], 1.0),
+    ([{"weight": 0.6}, {"weight": 0.6}], 0.8),
+    ([{"weight": 0.2}, {"weight": 0.2}], 0.0),
+    ([{"weight": 0.35}, {"weight": 0.45}], 0.4),
+    ([{"weight": 0.7}, {"weight": 0.8}], 1.0),
+    ([{"weight": 0.2}] * 5, 0.0),
+    ([{"weight": 0.5}] * 3, 0.9),
+    ([{"weight": 0.9}, {"weight": 0.6}], 1.0),
+    ([{"weight": 0.1}, {"weight": 0.21}], 0.01),
+])
+def test_compute_risk_score(findings, expected, filter):
+    assert filter.compute_risk_score(findings) == expected

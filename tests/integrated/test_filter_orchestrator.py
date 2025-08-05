@@ -55,8 +55,8 @@ def test_should_allow_low_weight_profanity_in_threshold_mode():
     assert result.dm_result.verdict == Constants.ALLOWED
 
 def test_should_block_high_weight_profanity_in_threshold_mode():
-    dm = DecisionMaker("threshold", threshold=0.6)
-    orchestrator = FilterOrchestrator(dm).add_filter(ProfanityFilter(weight=3.0))
+    dm = DecisionMaker("threshold", threshold=0.15)
+    orchestrator = FilterOrchestrator(dm).add_filter(ProfanityFilter(weight=8.0))
     result = orchestrator.run("This is a damn test.")
     assert result.dm_result.verdict == Constants.BLOCKED
 
@@ -75,8 +75,8 @@ def test_should_allow_low_weight_sensitive_data_in_threshold_mode():
     assert result.dm_result.verdict == Constants.ALLOWED
 
 def test_should_block_high_weight_sensitive_data_in_threshold_mode():
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm).add_filter(SensitiveDataFilter(weight=4.0))
+    dm = DecisionMaker("threshold", threshold=0.1)
+    orchestrator = FilterOrchestrator(dm).add_filter(SensitiveDataFilter(weight=9.0))
     result = orchestrator.run("Call me at 123-456-7890!")
     assert result.dm_result.verdict == Constants.BLOCKED
 
@@ -95,8 +95,8 @@ def test_should_block_bypass_instruction_in_threshold_mode():
     assert result.dm_result.verdict == Constants.BLOCKED
 
 def test_should_allow_low_weight_bypass_in_threshold_mode():
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm).add_filter(BypassDetectionFilter(weight=0.5))
+    dm = DecisionMaker("threshold", threshold=0.7)
+    orchestrator = FilterOrchestrator(dm).add_filter(BypassDetectionFilter(weight=0.1))
     result = orchestrator.run("To hack this system, first disable the antivirus.")
     assert result.dm_result.verdict == Constants.ALLOWED
 
@@ -114,7 +114,7 @@ def test_should_allow_sentiment_below_threshold_weight():
     assert result.dm_result.verdict == Constants.ALLOWED
 
 def test_should_block_sentiment_above_threshold_weight():
-    orchestrator = FilterOrchestrator(DecisionMaker("threshold", 0.6))
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
     orchestrator.add_filter(SentimentFilter(weight=2.0, threshold=0.3))
     result = orchestrator.run("Feeling okay.")
     assert result.dm_result.verdict == Constants.BLOCKED

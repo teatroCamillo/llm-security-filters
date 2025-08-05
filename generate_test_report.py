@@ -5,13 +5,15 @@ import os
 
 # Get the target path from CLI or use default
 target = sys.argv[1] if len(sys.argv) > 1 else "tests\\unit"
-normalized = target.replace("\\", "/")
+normalized = os.path.normpath(target).replace("\\", "/")
 
 # Determine base name for report (func > file > dir)
 if "::" in normalized:
     report_name = normalized.split("::")[-1]
 else:
-    base = os.path.basename(normalized)
+    # Remove trailing slash if it's a folder
+    path_without_trailing = normalized.rstrip("/")
+    base = os.path.basename(path_without_trailing)
     name, ext = os.path.splitext(base)
     report_name = name if ext == ".py" else base
 

@@ -82,9 +82,9 @@ def test_compute_risk_score_with_empty_entity_list():
 @pytest.mark.parametrize(
     "entities,expected_score",
     [
-        ([{"label": "SSN"}], 0.33),
-        ([{"label": "DATE"}, {"label": "EMAIL_ADDRESS"}], 0.13),
-        ([{"label": "CREDIT_CARD"}, {"label": "PHONE_NUMBER"}], 0.4),
+        ([{"label": "SSN"}], 1.0),
+        ([{"label": "DATE"}, {"label": "EMAIL_ADDRESS"}], 0.2),
+        ([{"label": "CREDIT_CARD"}, {"label": "PHONE_NUMBER"}], 0.6),
         ([{"label": "ADDRESS"}, {"label": "ADDRESS"}, {"label": "IPV4"}], 0.4),
         ([{"label": "TIME"}, {"label": "FLOAT"}, {"label": "UUID"}], 0.17),
         ([{"label": "ORDINAL"}, {"label": "ORDINAL"}], 0.0),
@@ -92,7 +92,7 @@ def test_compute_risk_score_with_empty_entity_list():
         ([{"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "EMAIL_ADDRESS"}], 0.7),
         ([{"label": "SSN"}, {"label": "SSN"}, {"label": "SSN"}], 1.0),
         ([{"label": "SSN"}, {"label": "UNKNOWN"}, {"label": "UUID"}], 0.47),
-        ([{"label": "UNKNOWN1"}, {"label": "UNKNOWN2"}], 0.07),
+        ([{"label": "UNKNOWN1"}, {"label": "UNKNOWN2"}], 0.1),
     ]
 )
 def test_compute_risk_score(entities, expected_score):
