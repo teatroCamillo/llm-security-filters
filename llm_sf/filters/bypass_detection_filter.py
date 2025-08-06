@@ -61,15 +61,92 @@ class BypassDetectionFilter(BaseFilter):
             return {"matched": True, "reason": "Repeated token attack", "weight": 0.4}
         return {"matched": False}
 
+    # def compute_risk_score(self, findings: list) -> float:
+    #     if not findings:
+    #         return 0.0
+
+    #     threshold = 0.2
+    #     capped_weight = 1.0
+
+    #     # Apply ReLU to each weight, subtracting threshold
+    #     relu_weights = [max(f.get("weight", 0.1) - threshold, 0) for f in findings]
+    #     total_risk = sum(relu_weights)
+    #     score = min(total_risk / capped_weight, 1.0)
+    #     return round(score, 2)
+
+    # def compute_risk_score(self, findings: list) -> float:
+    #     if not findings:
+    #         return 0.0
+    #     total_weight = sum(f.get("weight", 0.1) for f in findings)
+    #     max_possible_weight = sum([
+    #         0.8,  # Jailbreak
+    #         0.4,  # Repeated tokens
+    #     ])
+    #     return round(min(total_weight / max_possible_weight, 1.0), 2)
+
+
+    # def compute_risk_score(self, findings: list) -> float:
+    #     if not findings:
+    #         return 0.0
+
+    #     weights = [max(0.0, min(f.get("weight", 0.0), 10.0)) for f in findings]
+    #     if not weights:
+    #         return 0.0
+
+    #     avg_weight = sum(weights) / len(weights)  # Range: 0.0 - 10.0
+    #     norm_weight = avg_weight / 10.0  # Normalize to [0.0 - 1.0]
+
+    #     count_factor = min(len(findings) / 10.0, 1.0)  # Cap at 10 findings
+
+    #     # Final score balances both weight intensity and volume
+    #     score = (norm_weight * 0.6 + count_factor * 0.4)
+    #     return round(min(score, 1.0), 2)
+
+    # def compute_risk_score(self, findings: list) -> float:
+    #     if not findings:
+    #         return 0.0
+
+    #     # Extract and clamp weights between 0 and 10
+    #     weights = [min(max(f.get("weight", 0.0), 0.0), 10.0) for f in findings]
+    #     if not weights:
+    #         return 0.0
+
+    #     # === Tuning parameters ===
+    #     weight_exponent = 1.2       # Amplify strong weights
+    #     count_exponent = 1.1        # Slight boost to multiple findings
+    #     weight_scale = 1.2          # Controls how fast weights push score
+    #     count_scale = 1.5           # Controls how fast count pushes score
+
+    #     # === Score calculation ===
+    #     weight_component = (sum(w**weight_exponent for w in weights) / weight_scale)
+    #     count_component = (len(weights) ** count_exponent) / count_scale
+
+    #     raw_score = weight_component + count_component
+    #     scaled_score = math.log1p(raw_score) / math.log1p(10)  # Normalize to ~[0, 1]
+    #     return round(min(scaled_score, 1.0), 2)
+
     def compute_risk_score(self, findings: list) -> float:
         if not findings:
             return 0.0
 
-        threshold = 0.2
-        capped_weight = 1.0
+        # Only keep valid positive weights (clamped to 10.0 max)
+        weights = [min(f.get("weight", 0.0), 10.0) for f in findings if f.get("weight", 0.0) > 0.0]
+        
+        # If no positive weights, return 0.0
+        if not weights:
+            return 0.0
 
-        # Apply ReLU to each weight, subtracting threshold
-        relu_weights = [max(f.get("weight", 0.1) - threshold, 0) for f in findings]
-        total_risk = sum(relu_weights)
-        score = min(total_risk / capped_weight, 1.0)
-        return round(score, 2)
+        # === Tuning parameters ===
+        weight_exponent = 1.2       # Amplify strong weights
+        count_exponent = 1.1        # Slight boost to multiple findings
+        weight_scale = 1.2          # Controls how fast weights push score
+        count_scale = 1.5           # Controls how fast count pushes score
+
+        # === Score calculation ===
+        weight_component = sum(w ** weight_exponent for w in weights) / weight_scale
+        count_component = (len(weights) ** count_exponent) / count_scale
+
+        raw_score = weight_component + count_component
+        scaled_score = math.log1p(raw_score) / math.log1p(10)  # Normalize to ~[0, 1]
+
+        return round(min(scaled_score, 1.0), 2)

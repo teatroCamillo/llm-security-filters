@@ -1,4 +1,5 @@
 import requests
+import datetime
 import csv
 import io
 import os
@@ -300,7 +301,10 @@ class TestSystem:
 
         return qa_list
 
-    def generate_report(self, test_cases, overall_metrics_fn, output_path="system_test_report.md"):
+    def generate_report(self, test_cases, overall_metrics_fn, output_path="system_test_report"):
+        
+        start_time = datetime.datetime.now()
+        output_path = output_path + "_" + start_time.strftime("%Y%m%d_%H%M%S") + ".md"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         lines = ["# 🧪 System Test Report\n"]
 
@@ -310,11 +314,11 @@ class TestSystem:
                 lines.append(f"### 🔹 Sub-Test #{i + 1}")
                 lines.append(f"- **Input Prompt**: `{prompt}`")
                 lines.append(f"- **Expected Inbound Verdict**: `{test.expected_ins[i] if test.expected_ins else 'N/A'}`")
-                lines.append(f"- **Actual Inbound Verdict**: `{test.inbound_dm_outputs[i].verdict if test.inbound_dm_outputs[i] else 'N/A'}`")
+                lines.append(f"- **Actual Inbound Verdict**: `{test.inbound_dm_outputs[i] if test.inbound_dm_outputs[i] else 'N/A'}`")
                 lines.append(f"- **Inbound Filter Results**: `{test.inbound_filters_outputs[i]}`")
                 lines.append(f"- **LLM Output**: `{test.llm_outputs[i]}`")
                 lines.append(f"- **Expected Outbound Verdict**: `{test.expected_outs[i] if test.expected_outs else 'N/A'}`")
-                lines.append(f"- **Actual Outbound Verdict**: `{test.outbound_dm_output[i].verdict if test.outbound_dm_output[i] else 'N/A'}`")
+                lines.append(f"- **Actual Outbound Verdict**: `{test.outbound_dm_output[i] if test.outbound_dm_output[i] else 'N/A'}`")
                 lines.append(f"- **Outbound Filter Results**: `{test.outbound_filters_outputs[i]}`")
                 lines.append(f"- ✅ **Partial Pass**: `{test.is_passed_partials[i]}`\n")
 

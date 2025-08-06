@@ -67,37 +67,45 @@ def test_should_block_text_with_multiple_triggers(filter):
     assert result.verdict == Constants.BLOCKED
     assert "repeated" in result.reason.lower()
 
-@pytest.mark.parametrize("findings,expected", [
+@pytest.mark.parametrize("findings, expected", [
+    # ➕ Empty or invalid
     ([], 0.0),
-    ([{"weight": 0.1}], 0.0),
-    ([{"weight": 0.2}], 0.0),
-    ([{"weight": 0.21}], 0.01),
-    ([{"weight": 0.3}], 0.1),
-    ([{"weight": 0.4}], 0.2),
-    ([{"weight": 0.6}], 0.4),
-    ([{"weight": 1.0}], 0.8),
-    ([{"weight": 2.0}], 1.0),
+    ([{}], 0.0),
     ([{"weight": -1.0}], 0.0),
-    ([{"weight": 0.1}, {"weight": 0.1}], 0.0),
-    ([{"weight": 0.1}, {"weight": 0.3}], 0.1),
-    ([{"weight": 0.2}, {"weight": 0.4}], 0.2),
-    ([{"weight": 0.5}, {"weight": 0.6}], 0.7),
-    ([{"weight": 0.9}, {"weight": 0.9}], 1.0),
-    ([{"weight": 0.25}] * 10, 0.5),
-    ([{"weight": 0.25}] * 20, 1.0),
-    ([{"weight": 0.5}, {"weight": -1.0}], 0.3),
-    ([{"weight": 0.1}, {}], 0.0),
-    ([{}, {"weight": 0.3}], 0.1),
-    ([{}, {}, {}], 0.0),
-    ([{"weight": 1.0}, {"weight": 1.0}], 1.0),
-    ([{"weight": 0.6}, {"weight": 0.6}], 0.8),
-    ([{"weight": 0.2}, {"weight": 0.2}], 0.0),
-    ([{"weight": 0.35}, {"weight": 0.45}], 0.4),
-    ([{"weight": 0.7}, {"weight": 0.8}], 1.0),
-    ([{"weight": 0.2}] * 5, 0.0),
-    ([{"weight": 0.5}] * 3, 0.9),
-    ([{"weight": 0.9}, {"weight": 0.6}], 1.0),
-    ([{"weight": 0.1}, {"weight": 0.21}], 0.01),
+    ([{"weight": 100.0}], 1.0),
+
+    # ➕ Single findings
+    ([{"weight": 1.0}], 0.38),
+    ([{"weight": 5.0}], 0.84),
+    ([{"weight": 10.0}], 1.0),
+
+    # ➕ Multiple same-weight
+    ([{"weight": 1.0}] * 5, 0.92),  # (0.1 * 0.6) + (0.5 * 0.4)
+    ([{"weight": 10.0}] * 10, 1.0),
+    ([{"weight": 5.0}] * 10, 1.0),
+    ([{"weight": 5.0}] * 20, 1.0),  # Count factor capped at 1.0
+
+    # ➕ Mixed weights
+    ([{"weight": 2.0}, {"weight": 4.0}], 0.9),
+    ([{"weight": 0.0}, {"weight": 10.0}], 1.0),
+
+    # ➕ Count dominated
+    ([{"weight": 1.0}] * 10, 1.0),
+    ([{"weight": 1.0}] * 5, 0.92),
+    ([{"weight": 1.0}] * 20, 1.0),
+
+    # ➕ Weight dominated
+    ([{"weight": 10.0}], 1.0),
+    ([{"weight": 10.0}, {"weight": 10.0}], 1.0),
+
+    # ➕ Realistic mixes
+    ([{"weight": 0.5}, {"weight": 1.5}, {"weight": 2.0}], 0.8),
+    ([{"weight": 9.0}, {"weight": 0.0}, {"weight": 1.0}], 1.0),
+    ([{"weight": 5.0}, {"weight": 5.0}, {"weight": 5.0}], 1.0),
+
+    # ➕ With missing or bad data
+    ([{"weight": 0.5}, {}, {"weight": 0.5}], 0.48),
+    ([{}, {}, {"weight": 10.0}], 1.0),
 ])
 def test_compute_risk_score(findings, expected, filter):
     assert filter.compute_risk_score(findings) == expected
