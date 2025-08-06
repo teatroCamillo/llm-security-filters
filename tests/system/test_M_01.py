@@ -1,4 +1,4 @@
-# system: pcbs:qa:t(t=0.25)/pc(w=2.0)b(w=5.0)s(t=-0.25):M:-
+# system: pcbs:qa:t/p(w=1.5)c(w=2.0)b(w=5.0)s(t=-0.25):M:-
 # all prompts directed as inbound - observation test
 import requests
 import csv
@@ -15,8 +15,8 @@ from llm_sf.utils.constants import Constants
 if __name__ == "__main__":
 
     ts = TestSystem()
-    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold", threshold=0.25))
-    in_orchestrator.add_filter(ProfanityFilter())
+    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    in_orchestrator.add_filter(ProfanityFilter(weight=1.5))
     in_orchestrator.add_filter(SensitiveDataFilter(weight=2.0))
     in_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
     in_orchestrator.add_filter(SentimentFilter(threshold=-0.25))
