@@ -15,29 +15,29 @@ if __name__ == "__main__":
 
     ts = TestSystem()
     in_orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
-    in_orchestrator.add_filter(ProfanityFilter(weight=1.8))
-    in_orchestrator.add_filter(SensitiveDataFilter(weight=3.0))
-    in_orchestrator.add_filter(BypassDetectionFilter(weight=4.0))
+    in_orchestrator.add_filter(ProfanityFilter(weight=4.0))
+    in_orchestrator.add_filter(SensitiveDataFilter(weight=4.0))
+    in_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
     in_orchestrator.add_filter(SentimentFilter(weight=3.0, threshold=-0.3))
 
     out_orchestrator = FilterOrchestrator(DecisionMaker(mode="threshold"))
-    out_orchestrator.add_filter(ProfanityFilter(weight=3.0))
-    out_orchestrator.add_filter(SensitiveDataFilter(weight=1.1))
+    out_orchestrator.add_filter(ProfanityFilter(weight=2.0))
+    out_orchestrator.add_filter(SensitiveDataFilter(weight=3.5))
     out_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
     out_orchestrator.add_filter(SentimentFilter(weight=3.0, threshold=-0.3))
 
     test_cases = []
 
-    # prompts = ts.load_qa_from_csv(Constants.ST_CLEAN_SENTENCES_CSV)
-    # for i in range(0, len(prompts), 4):
-    #     temp = SystemTestCase(
-    #         in_prompts=prompts[i],
-    #         out_prompts=prompts[i+2],
-    #         expected_ins=prompts[i+1],
-    #         expected_outs=prompts[i+3],
-    #         name=f"CleanQA_{i}"
-    #     )
-    #     test_cases.append(temp)
+    prompts = ts.load_qa_from_csv(Constants.ST_CLEAN_SENTENCES_CSV)
+    for i in range(0, len(prompts), 4):
+        temp = SystemTestCase(
+            in_prompts=prompts[i],
+            out_prompts=prompts[i+2],
+            expected_ins=prompts[i+1],
+            expected_outs=prompts[i+3],
+            name=f"CleanQA_{i}"
+        )
+        test_cases.append(temp)
 
     prompts = ts.load_qa_for_system_tests_csv(Constants.ST_MIX_SENTENCES_CSV)
     for i in range(0, len(prompts), 5):

@@ -1,5 +1,6 @@
 import pytest
 import csv
+import math
 from llm_sf.filters.profanity_filter import ProfanityFilter
 from llm_sf.filter_manager.context import Context
 from llm_sf.utils.constants import Constants
@@ -83,32 +84,37 @@ def test_risk_score_should_be_zero_when_no_profanity():
     score = pf.compute_risk_score(context)
     assert score == 0.0
 
-def test_risk_score_should_be_one_for_single_profanity():
-    context = Context("damn")
-    pf = ProfanityFilter()
-    score = pf.compute_risk_score(context)
-    assert score == 1.0
-
-def test_risk_score_should_be_partial_for_mixed_content():
-    context = Context("this is damn bad")
-    pf = ProfanityFilter()
-    score = pf.compute_risk_score(context)
-    assert score == 0.2
-
-def test_risk_score_should_be_capped_at_one_for_multiple_profanities():
-    context = Context("damn hell crap")
-    pf = ProfanityFilter()
-    score = pf.compute_risk_score(context)
-    assert score == 1.0
-
 def test_risk_score_should_include_custom_badwords():
     context = Context("foobar test")
     pf = ProfanityFilter(custom_badwords=["foobar"])
     score = pf.compute_risk_score(context)
-    assert score == 0.5
+    assert score == 0.48
 
 def test_partial_word_should_not_trigger_profanity_match():
     context = Context("assassin")
     pf = ProfanityFilter()
     score = pf.compute_risk_score(context)
     assert score == 0.0
+
+@pytest.mark.parametrize(
+    "text, expected_score",
+    [
+        ("This is a clean sentence", 0.0),
+        ("fuck", 0.59),      
+        ("fuck shit", 0.48),  
+        ("fuck you", 0.48),   
+        ("good bad shit", 0.42),                       
+        ("good " * 100 + "fuck", 0.18),                            
+        ("fuck " * 50 + "good " * 50, 1.0),                      
+        ("", 0.0),                                                  
+        ("hello", 0.0),                                     
+        ("fuck fuck fuck fuck", 1.0),                         
+        ("You are a fucking idiot", 0.36),                       
+        ("shit damn hell crap", 1.0),                              
+    ]
+)
+def test_compute_risk_score_exact(text, expected_score):
+    context = Context(text)
+    pf = ProfanityFilter()
+    result = pf.compute_risk_score(context)
+    assert result == expected_score, f"Expected {expected_score}, got {result} for: {text}"

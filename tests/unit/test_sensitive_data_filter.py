@@ -79,20 +79,73 @@ def test_compute_risk_score_with_empty_entity_list():
     score = filter_obj.compute_risk_score([])
     assert score == 0.0
 
+
 @pytest.mark.parametrize(
     "entities,expected_score",
     [
+        # --- Single label tests (raw values) ---
+        ([{"label": "ADDRESS"}], 0.4),
+        ([{"label": "BAN"}], 0.5),
+        ([{"label": "CREDIT_CARD"}], 0.9),
+        ([{"label": "DATE"}], 0.2),
+        ([{"label": "TIME"}], 0.1),
+        ([{"label": "DATETIME"}], 0.2),
+        ([{"label": "DRIVERS_LICENSE"}], 0.8),
+        ([{"label": "EMAIL_ADDRESS"}], 0.2),
+        ([{"label": "UUID"}], 0.3),
+        ([{"label": "HASH_OR_KEY"}], 0.6),
+        ([{"label": "IPV4"}], 0.4),
+        ([{"label": "IPV6"}], 0.4),
+        ([{"label": "MAC_ADDRESS"}], 0.3),
+        ([{"label": "PHONE_NUMBER"}], 0.3),
         ([{"label": "SSN"}], 1.0),
-        ([{"label": "DATE"}, {"label": "EMAIL_ADDRESS"}], 0.2),
-        ([{"label": "CREDIT_CARD"}, {"label": "PHONE_NUMBER"}], 0.6),
-        ([{"label": "ADDRESS"}, {"label": "ADDRESS"}, {"label": "IPV4"}], 0.4),
-        ([{"label": "TIME"}, {"label": "FLOAT"}, {"label": "UUID"}], 0.17),
-        ([{"label": "ORDINAL"}, {"label": "ORDINAL"}], 0.0),
-        ([{"label": "BAN"}, {"label": "HASH_OR_KEY"}, {"label": "DRIVERS_LICENSE"}], 0.63),
-        ([{"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "EMAIL_ADDRESS"}], 0.7),
-        ([{"label": "SSN"}, {"label": "SSN"}, {"label": "SSN"}], 1.0),
-        ([{"label": "SSN"}, {"label": "UNKNOWN"}, {"label": "UUID"}], 0.47),
+        ([{"label": "URL"}], 0.2),
+        ([{"label": "US_STATE"}], 0.2),
+        ([{"label": "FLOAT"}], 0.2),
+        ([{"label": "QUANTITY"}], 0.3),
+        ([{"label": "ORDINAL"}], 0.2),
+
+        # --- Mixed label cases ---
+        ([{"label": "CREDIT_CARD"}, {"label": "SSN"}], 0.95),
+        ([{"label": "ADDRESS"}, {"label": "IPV4"}], 0.4),
+        ([{"label": "DATE"}, {"label": "TIME"}], 0.15),
+        ([{"label": "BAN"}, {"label": "EMAIL_ADDRESS"}], 0.35),
+        ([{"label": "HASH_OR_KEY"}, {"label": "UUID"}, {"label": "MAC_ADDRESS"}], 0.4),
+        ([{"label": "URL"}, {"label": "UUID"}, {"label": "SSN"}], 0.5),
+        ([{"label": "PHONE_NUMBER"}, {"label": "MAC_ADDRESS"}, {"label": "FLOAT"}], 0.27),
+        ([{"label": "ORDINAL"}, {"label": "ORDINAL"}, {"label": "ORDINAL"}], 0.2),
+
+        # --- Unknown labels ---
+        ([{"label": "UNKNOWN"}], 0.1),
+        ([{"label": "SSN"}, {"label": "UNKNOWN"}], 0.55),
         ([{"label": "UNKNOWN1"}, {"label": "UNKNOWN2"}], 0.1),
+        ([{"label": "UUID"}, {"label": "UNKNOWN"}, {"label": "EMAIL_ADDRESS"}], 0.2),
+
+        # --- All low severity types ---
+        ([{"label": "FLOAT"}, {"label": "QUANTITY"}, {"label": "ORDINAL"}], 0.23),
+
+        # --- All high severity types ---
+        ([{"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "DRIVERS_LICENSE"}], 0.9),
+
+        # --- Multiple of same label ---
+        ([{"label": "EMAIL_ADDRESS"}] * 5, 0.2),
+        ([{"label": "SSN"}] * 5, 1.0),
+        ([{"label": "DATE"}] * 3, 0.2),
+
+        # --- Mixed weights to test rounding and normalization ---
+        ([{"label": "BAN"}, {"label": "EMAIL_ADDRESS"}, {"label": "ADDRESS"}], 0.37),
+        ([{"label": "UUID"}, {"label": "MAC_ADDRESS"}, {"label": "IPV6"}], 0.33),
+
+        # --- Empty input ---
+        ([], 0.0),
+
+        # --- One label repeated N times with normalization ---
+        ([{"label": "CREDIT_CARD"}] * 3, 0.9),
+        ([{"label": "TIME"}] * 10, 0.1),
+        ([{"label": "ORDINAL"}] * 5, 0.2),
+
+        # --- Max cap at 1.0 ---
+        ([{"label": "SSN"}, {"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "DRIVERS_LICENSE"}], 0.93),
     ]
 )
 def test_compute_risk_score(entities, expected_score):

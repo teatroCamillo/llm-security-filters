@@ -107,10 +107,10 @@ class SensitiveDataFilter(BaseFilter):
             'PHONE_NUMBER': 0.3,
             'SSN': 1.0, # Social Security Number
             'URL': 0.2,
-            'US_STATE': 0.1,
-            'FLOAT': 0.1,
-            'QUANTITY': 0.1,
-            'ORDINAL': 0.0
+            'US_STATE': 0.2,
+            'FLOAT': 0.2,
+            'QUANTITY': 0.3,
+            'ORDINAL': 0.2
         }
 
         max_total_severity = len(entities) if len(entities) > 1 else 1.0
