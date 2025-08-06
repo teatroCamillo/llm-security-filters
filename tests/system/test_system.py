@@ -144,7 +144,7 @@ class TestSystem:
             if outbound_output and expected_out:
                 print(f"  Test passed?            : {'✅ Passed' if expected_out == outbound_output.verdict else '❌ Failed'}")
             else:
-                print(f"  Test passed?            : None")
+                print(f"  Test passed?           : None")
 
     def compute_overall_metrics(self, test_cases):
 
