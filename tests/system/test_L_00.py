@@ -14,17 +14,17 @@ from llm_sf.utils.constants import Constants
 if __name__ == "__main__":
 
     ts = TestSystem()
-    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold", threshold=0.28))
-    in_orchestrator.add_filter(ProfanityFilter(weight=1.8))
-    in_orchestrator.add_filter(SensitiveDataFilter())
-    in_orchestrator.add_filter(BypassDetectionFilter(weight=4.0))
-    in_orchestrator.add_filter(SentimentFilter())
+    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    in_orchestrator.add_filter(ProfanityFilter(weight=1.5))
+    in_orchestrator.add_filter(SensitiveDataFilter(weight=2.0))
+    in_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
+    in_orchestrator.add_filter(SentimentFilter(threshold=-0.25))
 
-    out_orchestrator = FilterOrchestrator(DecisionMaker(mode="threshold", threshold=0.5))
-    out_orchestrator.add_filter(ProfanityFilter())
-    out_orchestrator.add_filter(SensitiveDataFilter())
-    out_orchestrator.add_filter(BypassDetectionFilter(weight=1.4))
-    out_orchestrator.add_filter(SentimentFilter(threshold=-0.3))
+    out_orchestrator = FilterOrchestrator(DecisionMaker(mode="threshold"))
+    out_orchestrator.add_filter(ProfanityFilter(weight=1.5))
+    out_orchestrator.add_filter(SensitiveDataFilter(weight=2.0))
+    out_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
+    out_orchestrator.add_filter(SentimentFilter(threshold=-0.2))
 
     test_cases = []
 
@@ -54,4 +54,4 @@ if __name__ == "__main__":
         ts.run(test, in_orchestrator, out_orchestrator, is_llm=True)
         ts.print_test_summary(test)
 
-    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_L_00.md")
+    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_L_00")
