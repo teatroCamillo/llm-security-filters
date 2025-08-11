@@ -15,7 +15,7 @@ class TestSystem:
         for j in range(len(test_case.in_prompts)):
             prompt = test_case.in_prompts[j]
 
-            # ===== Inbound Filtering =====
+            # Inbound filtering
             if inbound_orchestrator:
                 inbound_agg: FilterResultsAggregator = inbound_orchestrator.run(prompt)
                 inbound_dm_output = inbound_agg.dm_result
@@ -46,7 +46,7 @@ class TestSystem:
                 test_case.inbound_filters_outputs.append(None)
                 user_input_filtered = prompt
 
-            # ===== LLM Call =====
+            # LLM call
             if is_llm:
                 conversation = [{"role": "user", "content": user_input_filtered}]
                 llm_output = self._call_llm(conversation)
@@ -58,7 +58,7 @@ class TestSystem:
                 llm_output = None
                 test_case.llm_outputs.append(None)
 
-            # ===== Outbound Filtering =====
+            # Outbound filtering
             if outbound_orchestrator and llm_output is not None:
                 outbound_agg: FilterResultsAggregator = outbound_orchestrator.run(llm_output)
                 outbound_dm_output = outbound_agg.dm_result
@@ -208,7 +208,6 @@ class TestSystem:
 
         accuracy = (tp + tn) / total_in_use if total_in_use > 0 else 0
         fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
-        asr = fp / blocked_total if blocked_total > 0 else 0
 
         print("\n======= Overall Metrics =======")
         print(f"Total Samples         : {total_samples}")
@@ -227,8 +226,7 @@ class TestSystem:
         print(f"False Negatives (FN)  : {fn}")
         print()
         print(f"Accuracy              : {accuracy:.2%}")
-        print(f"False Positive Rate   : {fpr:.2%}")
-        print(f"Attack Success Rate   : {asr:.2%} ({fp}/{blocked_total})")
+        print(f"False Positive Rate   : {fpr:.2%} ({fp}/{(fp + tn)})")
         print("================================")
 
     def load_qa_from_csv(self, filepath):

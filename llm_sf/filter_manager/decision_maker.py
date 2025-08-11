@@ -9,10 +9,9 @@ class DecisionMaker:
     def __init__(self, mode: str = "allow-block", threshold: float = 0.15):
         """
         modes:
-        - threshold - range 0-1, as higher then worese
+        - threshold - range 0-1
         - allow-block
         """
-
         self.mode = mode
         self.threshold = threshold
 

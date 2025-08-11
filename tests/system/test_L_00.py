@@ -1,4 +1,4 @@
-# system: pcbs:qa:t(t=0.28)/p(w=1.8)cb(w=4.0)s:L:t/pcb(w=1.4)s(t=-0.3)
+# system: pcbs:qa:t/p(w=1.5)c(w=2.0)b(w=5.0)s(t=-0.25):L:t/p(w=1.5)c(w=2.0)b(w=5.0)s(t=-0.2)
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
