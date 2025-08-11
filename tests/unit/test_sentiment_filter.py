@@ -47,7 +47,7 @@ def test_should_block_sentence_with_sentiment_just_below_threshold(filter):
     assert result.metadata["sentiment_scores"]["compound"] < -0.5
 
 def test_should_allow_sentence_with_sentiment_just_above_threshold(filter):
-    context = Context("This is not great, but okay.")  # ~ -0.6 or higher
+    context = Context("This is not great, but okay.")
     result = filter.run_filter(context)
     assert result.verdict == Constants.ALLOWED
     assert result.metadata["sentiment_scores"]["compound"] > -0.5
@@ -63,7 +63,7 @@ def test_should_allow_only_punctuation_as_neutral_case(filter):
     assert result.verdict == Constants.ALLOWED  # VADER treats this as neutral
 
 def test_should_block_uppercase_emphasized_negative_sentence(filter):
-    context = Context("I HATE this shit so MUCH!!!")  # Expected to be negative
+    context = Context("I HATE this shit so MUCH!!!")
     result = filter.run_filter(context)
     assert result.verdict == Constants.BLOCKED
 

@@ -1,4 +1,4 @@
-# system: p:q:ab/p:M:-
+# system: h:q:ab/pc:M:-
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
@@ -32,4 +32,4 @@ if __name__ == "__main__":
         ts.print_test_summary(test)
 
     #ts.compute_overall_metrics(test_cases)
-    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_M_02.md")
+    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_M_02")

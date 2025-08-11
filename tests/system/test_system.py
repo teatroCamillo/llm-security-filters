@@ -1,4 +1,5 @@
 import requests
+import datetime
 import csv
 import io
 import os
@@ -14,7 +15,7 @@ class TestSystem:
         for j in range(len(test_case.in_prompts)):
             prompt = test_case.in_prompts[j]
 
-            # ===== Inbound Filtering =====
+            # Inbound filtering
             if inbound_orchestrator:
                 inbound_agg: FilterResultsAggregator = inbound_orchestrator.run(prompt)
                 inbound_dm_output = inbound_agg.dm_result
@@ -45,7 +46,7 @@ class TestSystem:
                 test_case.inbound_filters_outputs.append(None)
                 user_input_filtered = prompt
 
-            # ===== LLM Call =====
+            # LLM call
             if is_llm:
                 conversation = [{"role": "user", "content": user_input_filtered}]
                 llm_output = self._call_llm(conversation)
@@ -57,7 +58,7 @@ class TestSystem:
                 llm_output = None
                 test_case.llm_outputs.append(None)
 
-            # ===== Outbound Filtering =====
+            # Outbound filtering
             if outbound_orchestrator and llm_output is not None:
                 outbound_agg: FilterResultsAggregator = outbound_orchestrator.run(llm_output)
                 outbound_dm_output = outbound_agg.dm_result
@@ -143,7 +144,7 @@ class TestSystem:
             if outbound_output and expected_out:
                 print(f"  Test passed?            : {'✅ Passed' if expected_out == outbound_output.verdict else '❌ Failed'}")
             else:
-                print(f"  Test passed?            : None")
+                print(f"  Test passed?           : None")
 
     def compute_overall_metrics(self, test_cases):
 
@@ -207,7 +208,6 @@ class TestSystem:
 
         accuracy = (tp + tn) / total_in_use if total_in_use > 0 else 0
         fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
-        asr = fp / blocked_total if blocked_total > 0 else 0
 
         print("\n======= Overall Metrics =======")
         print(f"Total Samples         : {total_samples}")
@@ -226,8 +226,7 @@ class TestSystem:
         print(f"False Negatives (FN)  : {fn}")
         print()
         print(f"Accuracy              : {accuracy:.2%}")
-        print(f"False Positive Rate   : {fpr:.2%}")
-        print(f"Attack Success Rate   : {asr:.2%} ({fp}/{blocked_total})")
+        print(f"False Positive Rate   : {fpr:.2%} ({fp}/{(fp + tn)})")
         print("================================")
 
     def load_qa_from_csv(self, filepath):
@@ -300,7 +299,10 @@ class TestSystem:
 
         return qa_list
 
-    def generate_report(self, test_cases, overall_metrics_fn, output_path="system_test_report.md"):
+    def generate_report(self, test_cases, overall_metrics_fn, output_path="system_test_report"):
+        
+        start_time = datetime.datetime.now()
+        output_path = output_path + "_" + start_time.strftime("%Y%m%d_%H%M%S") + ".md"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         lines = ["# 🧪 System Test Report\n"]
 
@@ -310,11 +312,11 @@ class TestSystem:
                 lines.append(f"### 🔹 Sub-Test #{i + 1}")
                 lines.append(f"- **Input Prompt**: `{prompt}`")
                 lines.append(f"- **Expected Inbound Verdict**: `{test.expected_ins[i] if test.expected_ins else 'N/A'}`")
-                lines.append(f"- **Actual Inbound Verdict**: `{test.inbound_dm_outputs[i].verdict if test.inbound_dm_outputs[i] else 'N/A'}`")
+                lines.append(f"- **Actual Inbound Verdict**: `{test.inbound_dm_outputs[i] if test.inbound_dm_outputs[i] else 'N/A'}`")
                 lines.append(f"- **Inbound Filter Results**: `{test.inbound_filters_outputs[i]}`")
                 lines.append(f"- **LLM Output**: `{test.llm_outputs[i]}`")
                 lines.append(f"- **Expected Outbound Verdict**: `{test.expected_outs[i] if test.expected_outs else 'N/A'}`")
-                lines.append(f"- **Actual Outbound Verdict**: `{test.outbound_dm_output[i].verdict if test.outbound_dm_output[i] else 'N/A'}`")
+                lines.append(f"- **Actual Outbound Verdict**: `{test.outbound_dm_output[i] if test.outbound_dm_output[i] else 'N/A'}`")
                 lines.append(f"- **Outbound Filter Results**: `{test.outbound_filters_outputs[i]}`")
                 lines.append(f"- ✅ **Partial Pass**: `{test.is_passed_partials[i]}`\n")
 

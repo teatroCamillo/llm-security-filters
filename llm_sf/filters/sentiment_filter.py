@@ -31,7 +31,7 @@ class SentimentFilter(BaseFilter):
 
     def run_filter(self, context) -> FilterResult:
         text = context.current_text
-        text = self.add_whitespace_around_punctuation(text)
+        text = self._add_whitespace_around_punctuation(text)
         scores = self.analyzer.polarity_scores(text)
         risk_score = self.compute_risk_score(scores["compound"])
 
@@ -61,7 +61,7 @@ class SentimentFilter(BaseFilter):
     def _update_lexicon(self, word, score):
         self.analyzer.lexicon[word] = score
 
-    def add_whitespace_around_punctuation(self, text):
+    def _add_whitespace_around_punctuation(self, text):
         pattern = f'([{re.escape("!?,.:;")}])'
         return re.sub(pattern, r' \1 ', text)
     

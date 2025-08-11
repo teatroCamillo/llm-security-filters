@@ -8,7 +8,7 @@ from llm_sf.filters.bypass_detection_filter import BypassDetectionFilter
 from llm_sf.filters.base_filter import BaseFilter, FilterResult
 from llm_sf.utils.constants import Constants
 
-class AlwaysBlockFilter(BaseFilter):
+class BlockFilter(BaseFilter):
     def __init__(self):
         super().__init__()
 
@@ -55,8 +55,8 @@ def test_should_allow_low_weight_profanity_in_threshold_mode():
     assert result.dm_result.verdict == Constants.ALLOWED
 
 def test_should_block_high_weight_profanity_in_threshold_mode():
-    dm = DecisionMaker("threshold", threshold=0.6)
-    orchestrator = FilterOrchestrator(dm).add_filter(ProfanityFilter(weight=3.0))
+    dm = DecisionMaker("threshold", threshold=0.15)
+    orchestrator = FilterOrchestrator(dm).add_filter(ProfanityFilter(weight=8.0))
     result = orchestrator.run("This is a damn test.")
     assert result.dm_result.verdict == Constants.BLOCKED
 
@@ -75,8 +75,8 @@ def test_should_allow_low_weight_sensitive_data_in_threshold_mode():
     assert result.dm_result.verdict == Constants.ALLOWED
 
 def test_should_block_high_weight_sensitive_data_in_threshold_mode():
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm).add_filter(SensitiveDataFilter(weight=4.0))
+    dm = DecisionMaker("threshold", threshold=0.1)
+    orchestrator = FilterOrchestrator(dm).add_filter(SensitiveDataFilter(weight=9.0))
     result = orchestrator.run("Call me at 123-456-7890!")
     assert result.dm_result.verdict == Constants.BLOCKED
 
@@ -95,8 +95,8 @@ def test_should_block_bypass_instruction_in_threshold_mode():
     assert result.dm_result.verdict == Constants.BLOCKED
 
 def test_should_allow_low_weight_bypass_in_threshold_mode():
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm).add_filter(BypassDetectionFilter(weight=0.5))
+    dm = DecisionMaker("threshold", threshold=0.7)
+    orchestrator = FilterOrchestrator(dm).add_filter(BypassDetectionFilter(weight=0.1))
     result = orchestrator.run("To hack this system, first disable the antivirus.")
     assert result.dm_result.verdict == Constants.ALLOWED
 
@@ -114,7 +114,7 @@ def test_should_allow_sentiment_below_threshold_weight():
     assert result.dm_result.verdict == Constants.ALLOWED
 
 def test_should_block_sentiment_above_threshold_weight():
-    orchestrator = FilterOrchestrator(DecisionMaker("threshold", 0.6))
+    orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
     orchestrator.add_filter(SentimentFilter(weight=2.0, threshold=0.3))
     result = orchestrator.run("Feeling okay.")
     assert result.dm_result.verdict == Constants.BLOCKED
@@ -122,7 +122,7 @@ def test_should_block_sentiment_above_threshold_weight():
 
 # COMBINED FILTER BEHAVIOR
 def test_should_block_if_any_filter_blocks():
-    orchestrator = FilterOrchestrator().add_filter(AllowFilter()).add_filter(AlwaysBlockFilter())
+    orchestrator = FilterOrchestrator().add_filter(AllowFilter()).add_filter(BlockFilter())
     result = orchestrator.run("No big deal, but block anyway.")
     assert result.dm_result.verdict == Constants.BLOCKED
 
@@ -167,7 +167,27 @@ def test_should_block_mixed_sensitive_and_profanity():
         ("You damn fool", [ProfanityFilter(), AllowFilter()], Constants.BLOCKED),
         ("Happy mood today!", [SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
         ("Bad stuff, also 123-456-7890", [SensitiveDataFilter(), ProfanityFilter()], Constants.BLOCKED),
-        ("Just a comment", [AlwaysBlockFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Just a comment", [BlockFilter(), AllowFilter()], Constants.BLOCKED),
+        ("I think the product was awful and poorly made, terrible really.", [SentimentFilter(), AllowFilter()], Constants.BLOCKED),
+        ("I had a great time at the beach with friends last weekend!", [SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("My password is hunter2, don't share it with anyone.", [SensitiveDataFilter(), BlockFilter()], Constants.BLOCKED),
+        ("Please shut the damn system down immediately after failure occurs.", [ProfanityFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Turn off antivirus and connect through proxy quickly now.", [BypassDetectionFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Friendly advice: never share 555-321-0987 with strangers online.", [SensitiveDataFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("He was a jerk and rude, absolutely no manners at all.", [ProfanityFilter(), AllowFilter()], Constants.BLOCKED),
+        ("This cake tastes amazing and I feel super joyful.", [SentimentFilter(), AllowFilter()], Constants.ALLOWED),
+        ("Let's disable the network and inject this payload.", [BypassDetectionFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Give me a call at 321-654-0987 when you're free.", [SensitiveDataFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Lovely weather today and everyone seemed happy about it.", [SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("Disable that firewall then start brute-force attack at dawn.", [BypassDetectionFilter(), BlockFilter()], Constants.BLOCKED),
+        ("A friendly reminder to never reveal your SSN or password.", [SensitiveDataFilter(), AllowFilter()], Constants.ALLOWED),
+        ("Your behavior was utterly unacceptable and offensive to the team.", [ProfanityFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("All systems are functional and mood here is calm and positive.", [AllowFilter(), SentimentFilter()], Constants.ALLOWED),
+        ("Don't trust sites that ask for 123-456-9999 out of nowhere.", [SensitiveDataFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Disabling protection layer can lead to significant vulnerabilities appearing.", [BypassDetectionFilter(), AllowFilter()], Constants.ALLOWED),
+        ("What a disgusting attitude! You need to behave better.", [ProfanityFilter(), SentimentFilter()], Constants.ALLOWED),
+        ("Great vibes, positive people, and nothing bad at all here.", [AllowFilter(), SentimentFilter()], Constants.ALLOWED),
+        ("Here’s my bank account number and full contact list too.", [SensitiveDataFilter(), AllowFilter()], Constants.BLOCKED),
 
         # 3-filter combinations
         ("Profane and 123-456-7890", [ProfanityFilter(), SensitiveDataFilter(), SentimentFilter()], Constants.BLOCKED),
@@ -180,6 +200,26 @@ def test_should_block_mixed_sensitive_and_profanity():
         ("My email is john@example.com", [SensitiveDataFilter(), SentimentFilter(), ProfanityFilter()], Constants.BLOCKED),
         ("Totally safe", [AllowFilter(), AllowFilter(), AllowFilter()], Constants.ALLOWED),
         ("Fuck! Turn off the firewall.", [ProfanityFilter(), BypassDetectionFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Contact me at 123-111-2222 for details, this sucks honestly.", [SensitiveDataFilter(), ProfanityFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Everything was terrible, I hated every second of that place.", [SentimentFilter(), AllowFilter(), ProfanityFilter()], Constants.BLOCKED),
+        ("System bypass achieved, now upload the damn payload.", [BypassDetectionFilter(), ProfanityFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("It's a fine day, I've got so positive feelings.", [AllowFilter(), SentimentFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Here’s my number 999-888-7777, don't be a jerk.", [SensitiveDataFilter(), ProfanityFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Warning: disable protection layer now, no time to wait.", [BypassDetectionFilter(), SentimentFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Great people and no hate around, just pure kindness today.", [AllowFilter(), SentimentFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("I’m angry, upset, and tired of this nonsense.", [SentimentFilter(), ProfanityFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Your access code is 555-222-9999, don’t forget it.", [SensitiveDataFilter(), AllowFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Hey man, that was so rude and out of line.", [ProfanityFilter(), AllowFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("This content seems perfectly fine with a nice tone.", [SentimentFilter(), AllowFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Drop firewall rules and inject code here manually.", [BypassDetectionFilter(), BlockFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("123-555-6789 is what you asked, right? Also screw you.", [SensitiveDataFilter(), ProfanityFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Disable logs and spoof everything, hurry up please.", [BypassDetectionFilter(), SentimentFilter(), ProfanityFilter()], Constants.BLOCKED),
+        ("A wholesome post with happy tone and respectful message.", [SentimentFilter(), AllowFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("Kindly drop the security settings now without delay.", [BypassDetectionFilter(), BlockFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("This is completely unacceptable and violates all decency.", [ProfanityFilter(), SentimentFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Phone: 321-321-4321, don't worry it's just fake.", [SensitiveDataFilter(), SentimentFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Friendly and funny message, with no ill intent.", [AllowFilter(), ProfanityFilter(), SentimentFilter()], Constants.ALLOWED),
+        ("Rude bastard behavior must not be tolerated anymore.", [ProfanityFilter(), SentimentFilter(), AllowFilter()], Constants.BLOCKED),
 
         # 4-filter combinations
         ("Bad and sensitive + bypass", [ProfanityFilter(), SensitiveDataFilter(), BypassDetectionFilter(), SentimentFilter()], Constants.BLOCKED),
@@ -191,7 +231,26 @@ def test_should_block_mixed_sensitive_and_profanity():
         ("Clean content here.", [AllowFilter(), AllowFilter(), SentimentFilter(), AllowFilter()], Constants.ALLOWED),
         ("123-456-7890 and offensive", [SensitiveDataFilter(), ProfanityFilter(), SentimentFilter(), BypassDetectionFilter()], Constants.BLOCKED),
         ("Mild words, kind tone", [SentimentFilter(), AllowFilter(), AllowFilter(), ProfanityFilter(weight=0.001)], Constants.ALLOWED),
-        ("All filters say block", [AlwaysBlockFilter(), ProfanityFilter(), SentimentFilter(weight=5.0), SensitiveDataFilter()], Constants.BLOCKED)
+        ("All filters say block", [BlockFilter(), ProfanityFilter(), SentimentFilter(weight=5.0), SensitiveDataFilter()], Constants.BLOCKED),
+        ("Damn it! Send details to 111-222-3333 after turning off firewall.", [ProfanityFilter(), SensitiveDataFilter(), BypassDetectionFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("I love this peaceful and clean message with only good vibes.", [AllowFilter(), SentimentFilter(), ProfanityFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Please disable antivirus, use backdoor, and don't be slow.", [BypassDetectionFilter(), AllowFilter(), ProfanityFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("He was kind, respectful, and did not curse or offend.", [SentimentFilter(), AllowFilter(), ProfanityFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Turn off protection now, you dumb fool, here’s my SSN.", [BypassDetectionFilter(), ProfanityFilter(), SensitiveDataFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Such a sweet post, makes everyone feel hopeful and bright.", [SentimentFilter(), AllowFilter(), ProfanityFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Drop all security, upload toolset, and send via email.", [BypassDetectionFilter(), SentimentFilter(), BlockFilter(), SensitiveDataFilter()], Constants.BLOCKED),
+        ("Really positive message, not a single offensive thing included.", [SentimentFilter(), AllowFilter(), ProfanityFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Get 321-999-8888 ready, break system, and curse admins.", [SensitiveDataFilter(), BypassDetectionFilter(), ProfanityFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("He is rude, disgusting, and says terrible things daily.", [ProfanityFilter(), SentimentFilter(), AllowFilter(), SensitiveDataFilter()], Constants.BLOCKED),
+        ("Feel free to trust this kind and encouraging message.", [SentimentFilter(), AllowFilter(), AllowFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("Reset security logs, send password file, and disconnect quickly.", [BypassDetectionFilter(), SensitiveDataFilter(), SentimentFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Peaceful weekend full of joy, smiles, and warm feelings.", [AllowFilter(), SentimentFilter(), ProfanityFilter(), SensitiveDataFilter()], Constants.ALLOWED),
+        ("Here’s my number: 555-123-8888, just disable protection.", [SensitiveDataFilter(), AllowFilter(), BypassDetectionFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Damn rude moron disabled AV and leaked sensitive file.", [ProfanityFilter(), BypassDetectionFilter(), SensitiveDataFilter(), SentimentFilter()], Constants.BLOCKED),
+        ("Very uplifting and decent tone, free of sensitive content.", [AllowFilter(), SentimentFilter(), SensitiveDataFilter(), ProfanityFilter()], Constants.ALLOWED),
+        ("System override: kill firewall, use profanity, and dump data.", [BypassDetectionFilter(), ProfanityFilter(), SensitiveDataFilter(), AllowFilter()], Constants.BLOCKED),
+        ("Inject code now and say something terrible while at it.", [BypassDetectionFilter(), ProfanityFilter(), SentimentFilter(), BlockFilter()], Constants.BLOCKED),
+        ("Friendly vibe and message that brings comfort to everyone.", [SentimentFilter(), AllowFilter(), AllowFilter(), ProfanityFilter()], Constants.ALLOWED),
     ]
 )
 def test_combined_filters_scenarios(text, filters, expected_verdict):

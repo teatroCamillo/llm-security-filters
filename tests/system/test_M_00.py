@@ -1,4 +1,4 @@
-# system: pcbs:qa:t(t=0.28)/p(w=1.8)cb(w=4.0)s:M:t/pc(w=1.1)b(w=4.0)s(t=-0.3)
+# system: pcbs:qa:t/p(w=4.0)c(w=4.0)b(w=5.0)s(w=3.0,t=-0.3):M:t/p(w=2.0)c(w=3.5)b(w=5.0)s(w=3,t=-0.3)
 import requests
 import csv
 from tests.system.system_test_case import SystemTestCase
@@ -14,17 +14,17 @@ from llm_sf.utils.constants import Constants
 if __name__ == "__main__":
 
     ts = TestSystem()
-    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold", threshold=0.28))
-    in_orchestrator.add_filter(ProfanityFilter(weight=1.8))
-    in_orchestrator.add_filter(SensitiveDataFilter())
-    in_orchestrator.add_filter(BypassDetectionFilter(weight=4.0))
-    in_orchestrator.add_filter(SentimentFilter())
+    in_orchestrator = FilterOrchestrator(DecisionMaker("threshold"))
+    in_orchestrator.add_filter(ProfanityFilter(weight=4.0))
+    in_orchestrator.add_filter(SensitiveDataFilter(weight=4.0))
+    in_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
+    in_orchestrator.add_filter(SentimentFilter(weight=3.0, threshold=-0.3))
 
     out_orchestrator = FilterOrchestrator(DecisionMaker(mode="threshold"))
-    out_orchestrator.add_filter(ProfanityFilter())
-    out_orchestrator.add_filter(SensitiveDataFilter(weight=1.1))
-    out_orchestrator.add_filter(BypassDetectionFilter(weight=4.0))
-    out_orchestrator.add_filter(SentimentFilter(threshold=-0.3))
+    out_orchestrator.add_filter(ProfanityFilter(weight=2.0))
+    out_orchestrator.add_filter(SensitiveDataFilter(weight=3.5))
+    out_orchestrator.add_filter(BypassDetectionFilter(weight=5.0))
+    out_orchestrator.add_filter(SentimentFilter(weight=3.0, threshold=-0.3))
 
     test_cases = []
 
@@ -55,4 +55,4 @@ if __name__ == "__main__":
         ts.print_test_summary(test)
 
     #ts.compute_overall_metrics(test_cases)
-    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_M_00.md")
+    ts.generate_report(test_cases, ts.compute_overall_metrics, "test_reports/test_M_00")
