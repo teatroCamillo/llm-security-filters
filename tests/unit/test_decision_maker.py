@@ -63,7 +63,7 @@ def test_should_return_original_text_in_metadata_if_allowed(dm):
 # # threshold TESTS 
 @pytest.fixture
 def threshold_dm():
-    return DecisionMaker(mode="threshold")
+    return DecisionMaker(mode="threshold", threshold=0.3)
 
 def test_should_allow_when_all_risk_scores_are_zero(threshold_dm):
     results = [
@@ -152,44 +152,44 @@ def test_should_include_aggregate_score_in_metadata(threshold_dm):
 @pytest.mark.parametrize(
     "inputs, expected_score, expected_verdict",
     [
-        # === LOW-END SCORES (well below threshold) ===
+        # LOW-END SCORES
         ([{"risk_score": 0.0, "weight": 1.0}], 0.0, Constants.ALLOWED),
         ([{"risk_score": 0.1, "weight": 1.0}], 0.1, Constants.ALLOWED),
         ([{"risk_score": 0.2, "weight": 1.0}], 0.2, Constants.ALLOWED),
         ([{"risk_score": 0.29, "weight": 1.0}], 0.29, Constants.ALLOWED),
 
-        # === EDGE CASES AROUND THRESHOLD 0.3 ===
+        # EDGE CASES AROUND THRESHOLD 0.3
         ([{"risk_score": 0.3, "weight": 1.0}], 0.3, Constants.ALLOWED),
-        ([{"risk_score": 0.301, "weight": 1.0}], 0.3, Constants.ALLOWED),  # rounds to 0.3
+        ([{"risk_score": 0.301, "weight": 1.0}], 0.3, Constants.ALLOWED),
         ([{"risk_score": 0.305, "weight": 1.0}], 0.3, Constants.ALLOWED),
         ([{"risk_score": 0.31, "weight": 1.0}], 0.31, Constants.BLOCKED),
 
-        # === HIGH-END SCORES ===
+        # HIGH-END SCORES
         ([{"risk_score": 0.6, "weight": 1.0}], 0.6, Constants.BLOCKED),
         ([{"risk_score": 1.0, "weight": 1.0}], 1.0, Constants.BLOCKED),
         ([{"risk_score": 0.9, "weight": 1.0}], 0.9, Constants.BLOCKED),
 
-        # === WEIGHTED AVERAGE CROSSING THRESHOLD ===
+        # WEIGHTED AVERAGE CROSSING THRESHOLD
         ([{"risk_score": 0.2, "weight": 1.0}, {"risk_score": 0.4, "weight": 1.0}], 0.3, Constants.ALLOWED),
         ([{"risk_score": 0.2, "weight": 1.0}, {"risk_score": 0.6, "weight": 1.0}], 0.4, Constants.BLOCKED),
         ([{"risk_score": 0.1, "weight": 2.0}, {"risk_score": 0.9, "weight": 1.0}], 0.37, Constants.BLOCKED),
         ([{"risk_score": 0.1, "weight": 3.0}, {"risk_score": 0.9, "weight": 1.0}], 0.3, Constants.ALLOWED),
 
-        # === ZERO WEIGHT ===
+        # ZERO WEIGHT
         ([{"risk_score": 0.9, "weight": 0.0}], 0.0, Constants.ALLOWED),
         ([{"risk_score": 0.0, "weight": 0.0}], 0.0, Constants.ALLOWED),
 
-        # === MIXED WEIGHTING ===
+        # MIXED WEIGHTING
         ([{"risk_score": 0.9, "weight": 1.0}, {"risk_score": 0.1, "weight": 9.0}], 0.18, Constants.ALLOWED),
         ([{"risk_score": 0.9, "weight": 5.0}, {"risk_score": 0.1, "weight": 1.0}], 0.77, Constants.BLOCKED),
         ([{"risk_score": 0.1, "weight": 1.0}, {"risk_score": 0.5, "weight": 2.0}], 0.37, Constants.BLOCKED),
 
-        # === MISSING WEIGHT OR RISK_SCORE ===
+        # MISSING WEIGHT OR RISK_SCORE
         ([{"risk_score": 0.5}], 0.5, Constants.BLOCKED),  # default weight 1.0
         ([{"weight": 1.0}], 0.0, Constants.ALLOWED),      # default score 0.0
         ([{}], 0.0, Constants.ALLOWED),                   # defaults both
 
-        # === ROUNDING VALIDATION ===
+        # ROUNDING VALIDATION
         ([{"risk_score": 0.666, "weight": 1.0}], 0.67, Constants.BLOCKED),
         ([{"risk_score": 0.664, "weight": 1.0}], 0.66, Constants.BLOCKED),
         ([{"risk_score": 0.296, "weight": 1.0}], 0.3, Constants.ALLOWED),

@@ -1,6 +1,6 @@
-# 🧪 Test Report for `test_bypass_detection_filter` (2025-08-05 14:03:20.170229)
+# 🧪 Test Report for `test_bypass_detection_filter` (2025-08-29 14:11:05.803664)
 
-Total tests: 373
+Total tests: 366
 
 - `tests/unit/test_bypass_detection_filter.py::test_should_initialize_with_default_weight` — ✅ PASSED
 
@@ -1386,23 +1386,23 @@ Total tests: 373
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings3-0.01]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings3-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings4-0.1]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings4-0.38]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings5-0.2]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings5-0.84]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings6-0.4]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings6-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings7-0.8]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings7-0.92]` — ✅ PASSED
 
 ---
 
@@ -1410,31 +1410,31 @@ Total tests: 373
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings9-0.0]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings9-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings10-0.0]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings10-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings11-0.1]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings11-0.9]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings12-0.2]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings12-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings13-0.7]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings13-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings14-1.0]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings14-0.92]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings15-0.5]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings15-1.0]` — ✅ PASSED
 
 ---
 
@@ -1442,55 +1442,27 @@ Total tests: 373
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings17-0.3]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings17-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings18-0.0]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings18-0.8]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings19-0.1]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings19-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings20-0.0]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings20-1.0]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings21-1.0]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings21-0.48]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings22-0.8]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings23-0.0]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings24-0.4]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings25-1.0]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings26-0.0]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings27-0.9]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings28-1.0]` — ✅ PASSED
-
----
-
-- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings29-0.01]` — ✅ PASSED
+- `tests/unit/test_bypass_detection_filter.py::test_compute_risk_score[findings22-1.0]` — ✅ PASSED
 
 ---
 
@@ -1499,7 +1471,7 @@ Total tests: 373
 
 ## ✅ Summary
 
-- Total: 373
-- ✅ Passed: 373
+- Total: 366
+- ✅ Passed: 366
 - ❌ Failed: 0
 - ⚠️ Skipped: 0

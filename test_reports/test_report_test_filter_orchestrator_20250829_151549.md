@@ -1,6 +1,6 @@
-# 🧪 Test Report for `integrated` (2025-08-05 14:58:04.154403)
+# 🧪 Test Report for `test_filter_orchestrator` (2025-08-29 15:15:49.394488)
 
-Total tests: 108
+Total tests: 107
 
 - `tests/integrated/test_filter_orchestrator.py::test_should_allow_sentence_without_profanity` — ✅ PASSED
 
@@ -19,10 +19,6 @@ Total tests: 108
 ---
 
 - `tests/integrated/test_filter_orchestrator.py::test_should_block_phone_number_by_sensitive_filter` — ✅ PASSED
-
----
-
-- `tests/integrated/test_filter_orchestrator.py::test_should_allow_low_weight_sensitive_data_in_threshold_mode` — ✅ PASSED
 
 ---
 
@@ -439,7 +435,7 @@ Total tests: 108
 
 ## ✅ Summary
 
-- Total: 108
-- ✅ Passed: 108
+- Total: 107
+- ✅ Passed: 107
 - ❌ Failed: 0
 - ⚠️ Skipped: 0

@@ -15,7 +15,7 @@ class SensitiveDataFilter(BaseFilter):
         super().__init__(weight=weight)
         self.labeler = DataLabeler(labeler_type='unstructured')
 
-    def run_filter(self, context):
+    def run_filter(self, context) -> FilterResult:
 
         text = context.current_text
         sensitive_labels = {

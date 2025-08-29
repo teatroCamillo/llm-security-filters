@@ -1,6 +1,6 @@
-# 🧪 Test Report for `test_sensitive_data_filter` (2025-08-05 13:50:32.879719)
+# 🧪 Test Report for `test_sensitive_data_filter` (2025-08-29 14:36:24.220394)
 
-Total tests: 442
+Total tests: 475
 
 - `tests/unit/test_sensitive_data_filter.py::test_should_initialize_with_default_weight` — ✅ PASSED
 
@@ -1726,47 +1726,179 @@ Total tests: 442
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities0-1.0]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities0-0.4]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities1-0.2]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities1-0.5]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities2-0.6]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities2-0.9]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities3-0.4]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities3-0.2]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities4-0.17]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities4-0.1]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities5-0.0]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities5-0.2]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities6-0.63]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities6-0.8]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities7-0.7]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities7-0.2]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities8-1.0]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities8-0.3]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities9-0.47]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities9-0.6]` — ✅ PASSED
 
 ---
 
-- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities10-0.1]` — ✅ PASSED
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities10-0.4]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities11-0.4]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities12-0.3]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities13-0.3]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities14-1.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities15-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities16-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities17-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities18-0.3]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities19-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities20-0.95]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities21-0.4]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities22-0.15]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities23-0.35]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities24-0.4]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities25-0.5]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities26-0.27]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities27-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities28-0.1]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities29-0.55]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities30-0.1]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities31-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities32-0.23]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities33-0.9]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities34-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities35-1.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities36-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities37-0.37]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities38-0.33]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities39-0.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities40-0.9]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities41-0.1]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities42-0.2]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_sensitive_data_filter.py::test_compute_risk_score[entities43-0.93]` — ✅ PASSED
 
 ---
 
@@ -1775,7 +1907,7 @@ Total tests: 442
 
 ## ✅ Summary
 
-- Total: 442
-- ✅ Passed: 442
+- Total: 475
+- ✅ Passed: 475
 - ❌ Failed: 0
 - ⚠️ Skipped: 0
