@@ -63,7 +63,7 @@ def test_should_return_original_text_in_metadata_if_allowed(dm):
 # # threshold TESTS 
 @pytest.fixture
 def threshold_dm():
-    return DecisionMaker(mode="threshold")
+    return DecisionMaker(mode="threshold", threshold=0.3)
 
 def test_should_allow_when_all_risk_scores_are_zero(threshold_dm):
     results = [

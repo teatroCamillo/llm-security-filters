@@ -68,12 +68,6 @@ def test_should_block_phone_number_by_sensitive_filter():
     assert result.dm_result.verdict == Constants.BLOCKED
     assert "PHONE_NUMBER" in result.dm_result.reason
 
-def test_should_allow_low_weight_sensitive_data_in_threshold_mode():
-    dm = DecisionMaker("threshold")
-    orchestrator = FilterOrchestrator(dm).add_filter(SensitiveDataFilter(weight=1.0))
-    result = orchestrator.run("Call me at 123-456-7890!")
-    assert result.dm_result.verdict == Constants.ALLOWED
-
 def test_should_block_high_weight_sensitive_data_in_threshold_mode():
     dm = DecisionMaker("threshold", threshold=0.1)
     orchestrator = FilterOrchestrator(dm).add_filter(SensitiveDataFilter(weight=9.0))

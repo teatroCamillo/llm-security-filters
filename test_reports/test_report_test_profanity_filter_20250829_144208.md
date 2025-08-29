@@ -1,6 +1,6 @@
-# 🧪 Test Report for `test_profanity_filter` (2025-08-04 18:51:44.072274)
+# 🧪 Test Report for `test_profanity_filter` (2025-08-29 14:42:08.988951)
 
-Total tests: 381
+Total tests: 390
 
 - `tests/unit/test_profanity_filter.py::test_should_initialize_with_default_weight` — ✅ PASSED
 
@@ -1506,18 +1506,6 @@ Total tests: 381
 
 ---
 
-- `tests/unit/test_profanity_filter.py::test_risk_score_should_be_one_for_single_profanity` — ✅ PASSED
-
----
-
-- `tests/unit/test_profanity_filter.py::test_risk_score_should_be_partial_for_mixed_content` — ✅ PASSED
-
----
-
-- `tests/unit/test_profanity_filter.py::test_risk_score_should_be_capped_at_one_for_multiple_profanities` — ✅ PASSED
-
----
-
 - `tests/unit/test_profanity_filter.py::test_risk_score_should_include_custom_badwords` — ✅ PASSED
 
 ---
@@ -1526,12 +1514,60 @@ Total tests: 381
 
 ---
 
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[This is a clean sentence-0.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[fuck-0.59]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[fuck shit-0.48]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[fuck you-0.48]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[good bad shit-0.42]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good fuck-0.18]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck fuck good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good good -1.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[-0.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[hello-0.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[fuck fuck fuck fuck-1.0]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[You are a fucking idiot-0.36]` — ✅ PASSED
+
+---
+
+- `tests/unit/test_profanity_filter.py::test_compute_risk_score_exact[shit damn hell crap-1.0]` — ✅ PASSED
+
+---
+
 
 ---
 
 ## ✅ Summary
 
-- Total: 381
-- ✅ Passed: 381
+- Total: 390
+- ✅ Passed: 390
 - ❌ Failed: 0
 - ⚠️ Skipped: 0
