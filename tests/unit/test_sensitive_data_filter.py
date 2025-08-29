@@ -79,11 +79,10 @@ def test_compute_risk_score_with_empty_entity_list():
     score = filter_obj.compute_risk_score([])
     assert score == 0.0
 
-
 @pytest.mark.parametrize(
     "entities,expected_score",
     [
-        # --- Single label tests (raw values) ---
+        # Single label tests
         ([{"label": "ADDRESS"}], 0.4),
         ([{"label": "BAN"}], 0.5),
         ([{"label": "CREDIT_CARD"}], 0.9),
@@ -105,7 +104,7 @@ def test_compute_risk_score_with_empty_entity_list():
         ([{"label": "QUANTITY"}], 0.3),
         ([{"label": "ORDINAL"}], 0.2),
 
-        # --- Mixed label cases ---
+        # Mixed label cases
         ([{"label": "CREDIT_CARD"}, {"label": "SSN"}], 0.95),
         ([{"label": "ADDRESS"}, {"label": "IPV4"}], 0.4),
         ([{"label": "DATE"}, {"label": "TIME"}], 0.15),
@@ -115,36 +114,36 @@ def test_compute_risk_score_with_empty_entity_list():
         ([{"label": "PHONE_NUMBER"}, {"label": "MAC_ADDRESS"}, {"label": "FLOAT"}], 0.27),
         ([{"label": "ORDINAL"}, {"label": "ORDINAL"}, {"label": "ORDINAL"}], 0.2),
 
-        # --- Unknown labels ---
+        # Unknown labels
         ([{"label": "UNKNOWN"}], 0.1),
         ([{"label": "SSN"}, {"label": "UNKNOWN"}], 0.55),
         ([{"label": "UNKNOWN1"}, {"label": "UNKNOWN2"}], 0.1),
         ([{"label": "UUID"}, {"label": "UNKNOWN"}, {"label": "EMAIL_ADDRESS"}], 0.2),
 
-        # --- All low severity types ---
+        # All low severity types
         ([{"label": "FLOAT"}, {"label": "QUANTITY"}, {"label": "ORDINAL"}], 0.23),
 
-        # --- All high severity types ---
+        # All high severity types
         ([{"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "DRIVERS_LICENSE"}], 0.9),
 
-        # --- Multiple of same label ---
+        # Multiple of same label
         ([{"label": "EMAIL_ADDRESS"}] * 5, 0.2),
         ([{"label": "SSN"}] * 5, 1.0),
         ([{"label": "DATE"}] * 3, 0.2),
 
-        # --- Mixed weights to test rounding and normalization ---
+        # Mixed weights to test rounding and normalization
         ([{"label": "BAN"}, {"label": "EMAIL_ADDRESS"}, {"label": "ADDRESS"}], 0.37),
         ([{"label": "UUID"}, {"label": "MAC_ADDRESS"}, {"label": "IPV6"}], 0.33),
 
-        # --- Empty input ---
+        # Empty input
         ([], 0.0),
 
-        # --- One label repeated N times with normalization ---
+        # One label repeated N times with normalization
         ([{"label": "CREDIT_CARD"}] * 3, 0.9),
         ([{"label": "TIME"}] * 10, 0.1),
         ([{"label": "ORDINAL"}] * 5, 0.2),
 
-        # --- Max cap at 1.0 ---
+        # Max cap at 1.0
         ([{"label": "SSN"}, {"label": "SSN"}, {"label": "CREDIT_CARD"}, {"label": "DRIVERS_LICENSE"}], 0.93),
     ]
 )

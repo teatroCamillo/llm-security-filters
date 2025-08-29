@@ -3,7 +3,7 @@ import csv
 import re
 import math
 from better_profanity import profanity
-from llm_sf.filters.base_filter import BaseFilter, FilterResult
+from llm_sf.filters.base_filter import BaseFilter
 from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
 
@@ -39,11 +39,9 @@ class ProfanityFilter(BaseFilter):
 
     def compute_risk_score(self, context) -> float:
         text = context.current_text
+        censor_char = "*"
 
-        if not profanity.contains_profanity(text):
-            return 0.0
-
-        censored_text = profanity.censor(text, "*")
+        censored_text = profanity.censor(text, censor_char)
         original_words = text.split()
         censored_words = censored_text.split()
 
@@ -56,7 +54,6 @@ class ProfanityFilter(BaseFilter):
         if total_words == 0:
             return 0.0
 
-        proportion = num_censored_words / total_words
         raw_score = num_censored_words / (math.log(total_words + 1) + 1)
         normalized_score = min(raw_score, 1.0)
         return round(normalized_score, 2)

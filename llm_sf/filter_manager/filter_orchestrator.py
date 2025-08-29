@@ -1,3 +1,4 @@
+# filter_orchestrator.py
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 from llm_sf.filters.base_filter import BaseFilter
@@ -5,7 +6,6 @@ from llm_sf.filter_manager.context import Context
 from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.filter_manager.filter_results_aggregator import FilterResultsAggregator
 from llm_sf.filter_manager.decision_maker import DecisionMaker
-from llm_sf.utils.constants import Constants
 
 class FilterOrchestrator:
 
@@ -17,7 +17,7 @@ class FilterOrchestrator:
         self._filters.append(filtr)
         return self
 
-    def run(self, text: str) -> FilterResult:
+    def run(self, text: str) -> FilterResultsAggregator:
         context = Context(text)
         results = []
         with ThreadPoolExecutor() as executor:

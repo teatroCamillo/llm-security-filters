@@ -1,6 +1,5 @@
 # decision_maker.py
 from typing import List
-import math
 from llm_sf.filters.base_filter import FilterResult
 from llm_sf.utils.constants import Constants
 

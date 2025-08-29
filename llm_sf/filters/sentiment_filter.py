@@ -1,16 +1,16 @@
 # sentiment_filter.py
-import nltk
-import csv
 import re
-import string
+import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from llm_sf.filters.base_filter import BaseFilter
 from llm_sf.filter_manager.filter_result import FilterResult
 from llm_sf.utils.constants import Constants
-from llm_sf.utils.word_mutator import WordMutator
 
-# Downloading the sentiment lexicon required by VADER
-nltk.download('vader_lexicon', quiet=True)
+def _ensure_vader_lexicon():
+    try:
+        nltk.data.find("sentiment/vader_lexicon.zip")
+    except LookupError:
+        nltk.download("vader_lexicon", quiet=True)
 
 class SentimentFilter(BaseFilter):
 
@@ -20,9 +20,13 @@ class SentimentFilter(BaseFilter):
         threshold=-0.5
         ):
         super().__init__(weight=weight)
+        if not (-1.0 <= threshold <= 1.0):
+            raise ValueError("threshold must be between -1.0 and 1.0 for negative filtering.")
         self.threshold = threshold
+
+        _ensure_vader_lexicon()
         self.analyzer = SentimentIntensityAnalyzer()
-        
+
         for word in Constants.load_csv(Constants.PROFANITIES_FULL_CSV):
             self._update_lexicon(word, -4.0)
         

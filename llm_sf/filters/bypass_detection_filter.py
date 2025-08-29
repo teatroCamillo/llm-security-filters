@@ -13,7 +13,7 @@ class BypassDetectionFilter(BaseFilter):
         super().__init__(weight=weight)
         self.patterns = Constants.load_csv(Constants.JAILBREAK_PATTERNS_CSV)
 
-    def run_filter(self, context):
+    def run_filter(self, context) -> FilterResult:
         text = context.current_text.lower()
         results = []
 
